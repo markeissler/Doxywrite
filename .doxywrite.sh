@@ -10,7 +10,7 @@
 #  This script to work properly. To achieve this:
 #    1. Expand the "Targets" item in the Xcode navigation pane,
 #    2. Right click on the sub-target you created the Run-Script in and select "Get-Info".
-#    3. In the Info window select the "Build" tab and create two new User-Defined Settings.
+#    3. [OPTIONAL] In the Info window select the "Build" tab and create two new User-Defined Settings.
 #       I.   DOXYGEN_DOCSET_BUNDLE_ID - For example like a java style package name,
 #            for example: 'com.yourorganization.yourproduct' this will become the name of
 #            the docset bundle.
@@ -20,6 +20,14 @@
 #                       /Applications/Doxygen.app/Contents/Resources/doxygen
 #               If you build Doxygen from Source:
 #                       /usr/local/bin/doxygen
+#     4. Under Run-Script, add the following line to call this script:
+#               ${SOURCE_ROOT}/.doxywrite.sh
+#     5. Finally, selected your Documentation target, with a deployment device of
+#        any emulator target. Then Build.
+#
+# To setup an Aggregate Target, see:
+#   http://www.simplicate.info/1/post/2013/07/using-appledoc-to-generate-xcode-help-part-1.html
+#
 
 # set
 
@@ -62,7 +70,8 @@ cp "$SOURCE_ROOT/.doxywrite.cfg" "$TEMP_DIR/.doxywrite.cfg"
 
 # These three values are different for each project.
 sed -e "s#^PROJECT_NAME\ *=.*#PROJECT_NAME = \"${PROJECT_NAME}\"#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
-sed -e "s#^INPUT\ *=.*#INPUT = \"$SOURCE_ROOT\"#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
+# sed -e "s#^INPUT\ *=.*#INPUT = \"$SOURCE_ROOT\"#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
+sed -e "s#^INPUT\ *=.*#INPUT = \"$SOURCE_ROOT/${PROJECT_NAME}\"#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
 sed -e "s#^OUTPUT_DIRECTORY\ *=.*#OUTPUT_DIRECTORY = \"$TEMP_DIR/DoxygenDocs.docset\"#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
 sed -e "s#^DOCSET_BUNDLE_ID\ *=.*#DOCSET_BUNDLE_ID = $DOXYGEN_DOCSET_BUNDLE_ID#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
 sed -e "s#^DOCSET_PUBLISHER\ *=.*#DOCSET_PUBLISHER = $DOXYGEN_DOCSET_PUBLISHER_NAME#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
@@ -108,12 +117,38 @@ sed -e "s#^HAVE_DOT\ *=.*#HAVE_DOT = YES#g" -i "" "$TEMP_DIR/.doxywrite.cfg"
 # Copy the updated config file to source directory
 # cp "$TEMP_DIR/.doxywrite.cfg" "$SOURCE_ROOT/.doxywrite.cfg.out"
 
-# Preserve a copy locally
-cp -R "$TEMP_DIR/DoxygenDocs.docset" "$SOURCE_ROOT/Documentation"
+# Doxygen will complain if the output directory doesn't exist. The warning will
+# trigger an error in Xcode and result in a failed build...even though Doxygen
+# goes and creates the directory. Redirecting errors does not seem to help, but
+# it would be heavyhanded to do so. Let's just proactively create the directory.
+DOXY_OUTPUT_DIR="$TARGET_TEMP_DIR/DoxygenDocs.docset"
+
+if [[ ! -d "${DOXY_OUTPUT_DIR}" ]]; then
+  RESP=$({ mkdir -p "${DOXY_OUTPUT_DIR}"; } 2>&1 )
+  if [[ ${RSLT} -ne 0 ]]; then
+    echo
+    echo "ABORTING. Unable to create doxygen output diretory: ${DOXY_OUTPUT_DIR}"
+    echo "Not sure what the problem is."
+    echo
+    exit 1
+  fi
+fi
 
 #  Run doxygen on the updated config file.
 #  Note: doxygen creates a Makefile that does most of the heavy lifting.
-"$DOXYGEN_PATH" "$TEMP_DIR/.doxywrite.cfg"
+RESP=$({ $DOXYGEN_PATH ${TEMP_DIR}/.doxywrite.cfg; } 2>&1 )
+RSLT=$?
+if [[ ${RSLT} -ne 0 ]]; then
+  echo
+  echo "ABORTING. Unable to generate documentation."
+  echo "Not sure what the problem is."
+  echo
+  exit 1
+fi
+echo "Finished generation documentation."
+
+# Preserve a copy locally
+cp -R "$TEMP_DIR/DoxygenDocs.docset" "$SOURCE_ROOT/Documentation"
 
 # echo "TEMP_DIR: $TEMP_DIR"
 # echo "DOXYGEN_PATH : $DOXYGEN_PATH"
