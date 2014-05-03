@@ -39,6 +39,7 @@ PATH_FIND="/usr/bin/find"
 PATH_MAKE="/usr/bin/make"
 PATH_CP="/bin/cp"
 PATH_RM="/bin/rm"
+PATH_TOUCH="/usr/bin/touch"
 
 # Install gnu grep via homebrew... (this will not symlink for you)
 #
@@ -74,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.0.0
+VERSION=1.1.0
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -98,10 +99,11 @@ PATH_STD_SED=""
 TMP_PATH_DOXY_CONFIG=".doxyfile.cfg"
 
 # doxygen config
-DOXYGEN_DOCSET_BUNDLE_ID="com.mycompany.MyDocSet.documentation"
-DOXYGEN_DOCSET_PUBLISHER_ID="com.mycompany.MyDocSet.documentation"
-DOXYGEN_DOCSET_PUBLISHER_NAME="Publisher"
-DOXYGEN_DOCSET_PAGE_MAIN="README.md"
+DOCSET_PROJECT_NAME="MyProject"
+DOCSET_BUNDLE_ID="com.yourdomain.projectname"
+DOCSET_PUBLISHER_ID="com.yourdomain.projectname"
+DOCSET_PUBLISHER_NAME="Publisher"
+DOCSET_PAGE_MAIN="README.md"
 
 #
 # FUNCTIONS
@@ -152,6 +154,13 @@ OPTIONS:
    -f                           Execute updates without user prompt
    -h                           Show this message
    -v                           Output version of this script
+
+EOF
+}
+
+function promptHelp {
+cat << EOF
+For help, run "${PROGNAME}" with the -h flag or without any options.
 
 EOF
 }
@@ -445,10 +454,11 @@ PATH_STD_SED="${PATH_SED}"
 # Clean up config file parameters
 #
 cleanString TARGETNAME
+cleanString DOCSET_PROJECT_NAME
 cleanString DOCSET_BUNDLE_ID
 cleanString DOCSET_PUBLISHER_ID
-cleanString DOXYGEN_DOCSET_PUBLISHER_NAME
-cleanString DOXYGEN_DOCSET_PAGE_MAIN
+cleanString DOCSET_PUBLISHER_NAME
+cleanString DOCSET_PAGE_MAIN
 cleanString PATH_ROOT
 cleanString PATH_SEARCH
 cleanString PATH_OUTPUT
@@ -484,9 +494,10 @@ fi
 # If PATH_ROOT is on / (root), bail out
 if [[ $(isPathRoot "${PATH_ROOT}") -eq 1 ]]; then
   echo
-  echo "ABORTING. You have specified a path on the / (root) directory: ${PATH_ROOT}"
+  echo "ABORTING. You have specified a rDirPath on the / (root) directory: ${PATH_ROOT}"
   echo "I don't want to work there."
   echo
+  usage
   exit 1
 fi
 
@@ -501,15 +512,16 @@ fi
 # If PATH_SEARCH is on / (root), bail out
 if [[ $(isPathRoot "${PATH_SEARCH}") -eq 1 ]]; then
   echo
-  echo "ABORTING. You have specified a path on the / (root) directory: ${PATH_SEARCH}"
+  echo "ABORTING. You have specified a sDirPath on the / (root) directory: ${PATH_SEARCH}"
   echo "I don't want to work there."
   echo
+  promptHelp
   exit 1
 fi
 
-if [ -n "${cli_TEMPPATH}" ]; then
-  cleanString cli_TEMPPATH;
-  PATH_WORK="${cli_TEMPPATH}";
+if [ -n "${cli_WORKPATH}" ]; then
+  cleanString cli_WORKPATH;
+  PATH_WORK="${cli_WORKPATH}";
 fi
 # If PATH_WORK is still empty, configure to /tmp
 if [ -z "${PATH_WORK}" ]; then
@@ -518,9 +530,10 @@ fi
 # If PATH_WORK is on / (root), bail out
 if [[ $(isPathRoot "${PATH_WORK}") -eq 1 ]]; then
   echo
-  echo "ABORTING. You have specified a path on the / (root) directory: ${PATH_WORK}"
+  echo "ABORTING. You have specified a wDirPath on the / (root) directory: ${PATH_WORK}"
   echo "I don't want to work there."
   echo
+  promptHelp
   exit 1
 fi
 
@@ -528,28 +541,34 @@ if [ -n "${cli_OUTPUTPATH}" ]; then
   cleanString cli_OUTPUTPATH;
   PATH_OUTPUT="${cli_OUTPUTPATH}";
 fi
-# If PATH_OUTPUT is still empty, configure to PATH_ROOT
+# If PATH_OUTPUT is still empty, configure to PATH_ROOT/Documentation
 if [ -z "${PATH_OUTPUT}" ]; then
-  PATH_OUTPUT="${PATH_ROOT}"
+  PATH_OUTPUT="${PATH_ROOT}/Documentation"
 fi
 # If PATH_OUTPUT is on / (root), bail out
 if [[ $(isPathRoot "${PATH_OUTPUT}") -eq 1 ]]; then
   echo
-  echo "ABORTING. You have specified a path on the / (root) directory: ${PATH_OUTPUT}"
+  echo "ABORTING. You have specified a oDirPath on the / (root) directory: ${PATH_OUTPUT}"
   echo "I don't want to work there."
   echo
+  promptHelp
   exit 1
 fi
 
 #
-# NONE OF THE FOLLOWING CAN BE SET FROM CLI AS OF YET
+# NONE OF THE FOLLOWING CAN BE SET FROM CLI AS OF YET but we can adjust defaults
 #
+# DOCSET_PROJECT_NAME
 # DOCSET_PUBLISHER_ID
-# DOXYGEN_DOCSET_PUBLISHER_NAME
-# DOXYGEN_DOCSET_PAGE_MAIN
+# DOCSET_PUBLISHER_NAME
+# DOCSET_PAGE_MAIN
 # PATH_DOXYGEN
 # PATH_GRAPHVIZ_DOT
 #
+
+if [ -z "${DOCSET_PROJECT_NAME}" ]; then
+  DOCSET_PROJECT_NAME="${TARGETNAME}"
+fi
 
 # bail out if minimum config isn't available
 #
@@ -565,14 +584,21 @@ fi
 #
 
 # Make sure PATH_WORK exists, create it if it doesn't
-if [[ ! -d "${PATH_WORK}" ]]; then
-  #
-  # Need to add directory
-  #
-  echo "Configured working directory appears to be missing. "
+printf "Checking for ${PATH_WORK} working directory... "
+if [[ -d "${PATH_WORK}" ]] && [[ $(isPathWriteable "${PATH_WORK}") -ne 1 ]]; then
+  echo "Found: ${PATH_WORK}"
+  echo
+  echo "ABORTING. Unable to access Doxywrite working directory: ${PATH_WORK}"
+  echo "Must be a write permissions error."
+  echo
+  exit 1
+elif [[ ! -d "${PATH_WORK}" ]]; then
+  printf "!!"
+  echo
+  echo "Doxywrite working directory appears to be missing. "
   echo
   if [[ "${FORCEEXEC}" -eq 0 ]]; then
-    echo "Ready to create working directory with configured path: ${PATH_WORK}"
+    echo "Ready to create Doxywrite working directory with configured path: ${PATH_WORK}"
     # prompt user for confirmation
     if [[ "no" == $(promptConfirm "Create working directory?") ]]
     then
@@ -581,17 +607,64 @@ if [[ ! -d "${PATH_WORK}" ]]; then
     fi
   fi
 
-  echo "Creating working directory with configured path: ${PATH_WORK}"
+  echo "Creating Doxywrite working directory with configured path: ${PATH_WORK}"
 
   RESP=$({ $PATH_MKDIR -p "${PATH_WORK}"; } 2>&1 )
   RSLT=$?
   if [[ ${RSLT} -ne 0 ]]; then
     echo
-    echo "ABORTING. Unable to create working directory: ${PATH_WORK}"
+    echo "ABORTING. Unable to create Doxywrite working diretory: ${PATH_WORK}"
     echo "Not sure what the problem is."
     echo
     exit 1
   fi
+
+  echo
+else
+  echo "Found: ${PATH_WORK}"
+  echo
+fi
+
+# Make sure PATH_OUTPUT exists, create it if it doesn't
+printf "Checking for ${PATH_OUTPUT} output directory... "
+if [[ -d "${PATH_OUTPUT}" ]] && [[ $(isPathWriteable "${PATH_OUTPUT}") -ne 1 ]]; then
+  echo "Found: ${PATH_OUTPUT}"
+  echo
+  echo "ABORTING. Unable to access Doxywrite output directory: ${PATH_OUTPUT}"
+  echo "Must be a write permissions error."
+  echo
+  exit 1
+elif [[ ! -d "${PATH_OUTPUT}" ]]; then
+  printf "!!"
+  echo
+  echo "Doxywrite output directory appears to be missing. "
+  echo
+  if [[ "${FORCEEXEC}" -eq 0 ]]; then
+    echo "Ready to create Doxywrite output directory with configured path: ${PATH_OUTPUT}"
+    # prompt user for confirmation
+    if [[ "no" == $(promptConfirm "Create output directory?") ]]
+    then
+      echo "Aborting."
+      exit 1
+    fi
+  fi
+
+  echo "Creating Doxywrite output directory with configured path: ${PATH_OUTPUT}"
+
+  RESP=$({ $PATH_MKDIR -p "${PATH_OUTPUT}"; } 2>&1 )
+  RSLT=$?
+  if [[ ${RSLT} -ne 0 ]]; then
+    echo
+    echo "ABORTING. Unable to create Doxywrite output diretory: ${PATH_OUTPUT}"
+    echo "Not sure what the problem is."
+    echo
+    exit 1
+  fi
+
+  echo
+else
+  echo "Found: ${PATH_OUTPUT}"
+  echo
 fi
 
 # Find doxygen config file (aka "Doxyfile")
@@ -621,7 +694,7 @@ elif [[ ! -f "${TMP_PATH_DOXY_CONFIG}" ]]; then
 
   echo "Creating Doxygen config file with configured path: ${TMP_PATH_DOXY_CONFIG}"
 
-  RESP=$({ $PATH_DOXYGEN -g "$SOURCE_ROOT/.doxywrite.cfg"; } 2>&1 )
+  RESP=$({ $PATH_DOXYGEN -g "${TMP_PATH_DOXY_CONFIG}"; } 2>&1 )
   RSLT=$?
   if [[ ${RSLT} -ne 0 ]]; then
     echo
@@ -630,66 +703,11 @@ elif [[ ! -f "${TMP_PATH_DOXY_CONFIG}" ]]; then
     echo
     exit 1
   fi
-fi
 
-#
-# Customize Doxygen config file
-#
-${PATH_SED} -e "s#^PROJECT_NAME\ *=.*#PROJECT_NAME = \"${PROJECT_NAME}\"#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-# sed -e "s#^INPUT\ *=.*#INPUT = \"$SOURCE_ROOT\"#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -e "s#^INPUT\ *=.*#INPUT = \"$SOURCE_ROOT/${PROJECT_NAME}\"#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -e "s#^OUTPUT_DIRECTORY\ *=.*#OUTPUT_DIRECTORY = \"$TEMP_DIR/DoxygenDocs.docset\"#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -e "s#^DOCSET_BUNDLE_ID\ *=.*#DOCSET_BUNDLE_ID = ${DOCSET_BUNDLE_ID}#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -e "s#^DOCSET_PUBLISHER\ *=.*#DOCSET_PUBLISHER = ${DOCSET_PUBLISHER_NAME}#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -e "s#^DOCSET_PUBLISHER_ID\ *=.*#DOCSET_PUBLISHER_ID = ${DOCSET_PUBLISHER_ID}#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Use the README.md file as the main page (index.html)
-${PATH_SED} -e "s#^USE_MDFILE_AS_MAINPAGE\ *=.*#USE_MDFILE_AS_MAINPAGE = ${DOCSET_PAGE_MAIN}#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Tell doxygen to generate a docset.
-${PATH_SED} -e "s#^GENERATE_DOCSET\ *=.*#GENERATE_DOCSET = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-${PATH_SED} -e "s#^RECURSIVE\ *=.*#RECURSIVE = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -e "s#^GENERATE_LATEX\ *=.*#GENERATE_LATEX = NO#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Don't repeat the @brief description in the extended class and method descriptions.
-${PATH_SED} -e "s#^REPEAT_BRIEF\ *=.*#REPEAT_BRIEF = NO#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Javadoc style list of links at the top of the page.
-#${PATH_SED} -e "s#^JAVADOC_AUTOBRIEF\ *=.*#JAVADOC_AUTOBRIEF = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Insert the @brief description into the class member list at the top of each class reference page.
-${PATH_SED} -e "s#^INLINE_INHERITED_MEMB\ *=.*#INLINE_INHERITED_MEMB = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Extracts documentation for **everything**, including stuff you might not want the user to know about.
-# You can still cause doxygen to skip stuff using special commands. If that's what you prefer uncomment
-# this and comment out the two lines below this one.
-${PATH_SED} -e "s#^EXTRACT_ALL\ *=.*#EXTRACT_ALL = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Hide undocumented members and classes.
-${PATH_SED} -e "s#^HIDE_UNDOC_MEMBERS\ *=.*#HIDE_UNDOC_MEMBERS = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -e "s#^HIDE_UNDOC_CLASSES\ *=.*#HIDE_UNDOC_CLASSES = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Enable class diagrams if you have dot installed...
-if [[ -x "${PATH_GRAPHVIZ_DOT}" ]]; then
-  ${PATH_SED} -e "s#^HAVE_DOT\ *=.*#HAVE_DOT = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-  ${PATH_SED} -e "s#^DOT_PATH\ *=.*#DOT_PATH = \"${PATH_GRAPHVIZ_DOT}#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-}
-
-# Additional diagram generation tweaks..
-#
-#${PATH_SED} -e "s#^TEMPLATE_RELATIONS\ *=.*#TEMPLATE_RELATIONS = YES#g" -i "" "${TMP_PATH_DOXY_CONFIG}"
-
-# Copy the updated config file to project directory
-echo "Copying Doxygen config file to project directory: ${PATH_ROOT}"
-RESP=$({ $PATH_CP "${TMP_PATH_DOXY_CONFIG}" "${PATH_ROOT}"; } 2>&1 )
-RSLT=$?
-if [[ ${RSLT} -ne 0 ]]; then
   echo
-  echo "WARNING. Unable to copy Doxygen config file to directory: ${PATH_ROOT}"
-  echo "Not sure what the problem is."
+else
+  echo "Found: ${TMP_PATH_DOXY_CONFIG}"
   echo
-  exit 1
 fi
 
 # Doxygen will complain if the output directory doesn't exist. The warning will
@@ -699,8 +717,8 @@ fi
 
 # Find doxygen docset directory
 TMP_PATH_DOXY_DOCSET="${PATH_WORK}/${TARGETNAME}-Documentation.docset"
-printf "Checking for ${TMP_PATH_DOXY_DOCSET} output directory... "
-if [[ -d "${TMP_PATH_DOXY_DOCSET}" ]] && [[ $(isPathWriteable "${TMP_PATH_DOXY_DOCSET}" -eq 0 ]]; then
+printf "Checking for ${TMP_PATH_DOXY_DOCSET} Doxygen temp output directory... "
+if [[ -d "${TMP_PATH_DOXY_DOCSET}" ]] && [[ $(isPathWriteable "${TMP_PATH_DOXY_DOCSET}") -ne 1 ]]; then
   echo "Found: ${TMP_PATH_DOXY_DOCSET}"
   echo
   echo "ABORTING. Unable to access Doxygen temp output directory: ${TMP_PATH_DOXY_DOCSET}"
@@ -715,7 +733,7 @@ elif [[ ! -d "${TMP_PATH_DOXY_DOCSET}" ]]; then
   if [[ "${FORCEEXEC}" -eq 0 ]]; then
     echo "Ready to create Doxygen temp output directory with configured path: ${TMP_PATH_DOXY_DOCSET}"
     # prompt user for confirmation
-    if [[ "no" == $(promptConfirm "Create temp output directory?") ]]
+    if [[ "no" == $(promptConfirm "Create Doxygen temp output directory?") ]]
     then
       echo "Aborting."
       exit 1
@@ -728,14 +746,80 @@ elif [[ ! -d "${TMP_PATH_DOXY_DOCSET}" ]]; then
   RSLT=$?
   if [[ ${RSLT} -ne 0 ]]; then
     echo
-    echo "ABORTING. Unable to create doxygen temp output diretory: ${TMP_PATH_DOXY_DOCSET}"
+    echo "ABORTING. Unable to create Doxygen temp output diretory: ${TMP_PATH_DOXY_DOCSET}"
     echo "Not sure what the problem is."
     echo
     exit 1
   fi
+else
+  echo "Found: ${TMP_PATH_DOXY_DOCSET}"
+  echo
 fi
 
-#  Run doxygen on the updated config file.
+#
+# Customize Doxygen config file
+#
+${PATH_SED} -i -r "s#^PROJECT_NAME\ *=.*#PROJECT_NAME = \"${DOCSET_PROJECT_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^INPUT\ *=.*#INPUT = \"${PATH_SEARCH}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^OUTPUT_DIRECTORY\ *=.*#OUTPUT_DIRECTORY = \"${TMP_PATH_DOXY_DOCSET}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^DOCSET_BUNDLE_ID\ *=.*#DOCSET_BUNDLE_ID = \"${DOCSET_BUNDLE_ID}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^DOCSET_PUBLISHER\ *=.*#DOCSET_PUBLISHER = \"${DOCSET_PUBLISHER_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^DOCSET_PUBLISHER_ID\ *=.*#DOCSET_PUBLISHER_ID = \"${DOCSET_PUBLISHER_ID}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Use the README.md file as the main page (index.html)
+${PATH_SED} -i -r "s#^USE_MDFILE_AS_MAINPAGE\ *=.*#USE_MDFILE_AS_MAINPAGE = ${DOCSET_PAGE_MAIN}#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Tell doxygen to generate a docset.
+${PATH_SED} -i -r "s#^GENERATE_DOCSET\ *=.*#GENERATE_DOCSET = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+
+${PATH_SED} -i -r "s#^RECURSIVE\ *=.*#RECURSIVE = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^GENERATE_LATEX\ *=.*#GENERATE_LATEX = NO#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Don't repeat the @brief description in the extended class and method descriptions.
+${PATH_SED} -i -r "s#^REPEAT_BRIEF\ *=.*#REPEAT_BRIEF = NO#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Javadoc style list of links at the top of the page.
+#${PATH_SED} -e "s#^JAVADOC_AUTOBRIEF\ *=.*#JAVADOC_AUTOBRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Insert the @brief description into the class member list at the top of each class reference page.
+${PATH_SED} -i -r "s#^INLINE_INHERITED_MEMB\ *=.*#INLINE_INHERITED_MEMB = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Extracts documentation for **everything**, including stuff you might not want the user to know about.
+# You can still cause doxygen to skip stuff using special commands. If that's what you prefer uncomment
+# this and comment out the two lines below this one.
+${PATH_SED} -i -r "s#^EXTRACT_ALL\ *=.*#EXTRACT_ALL = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Hide undocumented members and classes.
+${PATH_SED} -i -r "s#^HIDE_UNDOC_MEMBERS\ *=.*#HIDE_UNDOC_MEMBERS = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HIDE_UNDOC_CLASSES\ *=.*#HIDE_UNDOC_CLASSES = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Enable class diagrams if you have dot installed...
+if [[ -x "${PATH_GRAPHVIZ_DOT}" ]]; then
+  ${PATH_SED} -i -r "s#^HAVE_DOT\ *=.*#HAVE_DOT = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+  ${PATH_SED} -i -r "s#^DOT_PATH\ *=.*#DOT_PATH = \"${PATH_GRAPHVIZ_DOT}#g" "${TMP_PATH_DOXY_CONFIG}"
+fi
+
+# Additional diagram generation tweaks..
+#
+#${PATH_SED} -i -r "s#^TEMPLATE_RELATIONS\ *=.*#TEMPLATE_RELATIONS = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Copy the updated config file to project directory
+echo "Copying Doxygen config file to project directory: ${PATH_ROOT}"
+RESP=$({ $PATH_CP "${TMP_PATH_DOXY_CONFIG}" "${PATH_ROOT}"; } 2>&1 )
+RSLT=$?
+if [[ ${RSLT} -ne 0 ]]; then
+  echo
+  echo "WARNING. Unable to copy Doxygen config file to directory: ${PATH_ROOT}"
+  echo "Not sure what the problem is."
+  echo
+  exit 1
+else
+  echo "Finished!"
+  echo
+fi
+
+# Run doxygen on the updated config file.
+printf "Generating documentation docset..."
 RESP=$({ $PATH_DOXYGEN "${TMP_PATH_DOXY_CONFIG}"; } 2>&1 )
 RSLT=$?
 if [[ ${RSLT} -ne 0 ]]; then
@@ -744,21 +828,23 @@ if [[ ${RSLT} -ne 0 ]]; then
   echo "Not sure what the problem is."
   echo
   exit 1
+else
+  echo "Finished!"
+  echo
 fi
-echo "Finished generating documentation."
 
 # Copy the generated documentation to output directory
-TMP_PATH_DOXY_DOCSET="${PATH_OUTPUT}/${TARGETNAME}-Documentation.docset"
-
-echo "Copying Documentation to project directory: ${TMP_PATH_DOXY_DOCSET}"
-RESP=$({ $PATH_CP "${TMP_PATH_DOXY_DOCSET}" "${TMP_PATH_DOXY_DOCSET}"; } 2>&1 )
+echo "Copying Documentation to output directory: ${PATH_OUTPUT}"
+RESP=$({ $PATH_CP -R "${TMP_PATH_DOXY_DOCSET}" "${PATH_OUTPUT}"; } 2>&1 )
 RSLT=$?
 if [[ ${RSLT} -ne 0 ]]; then
   echo
-  echo "WARNING. Unable to copy Documentation to project directory: ${TMP_PATH_DOXY_DOCSET}"
-  echo "Not sure what the problem is."
+  echo "WARNING. Unable to copy Documentation to output directory: ${PATH_OUTPUT}"
+  echo "Not sure what the problem is. Continuing..."
   echo
-  exit 1
+else
+  echo "Finished!"
+  echo
 fi
 
 # Install docset via docsetutil.
@@ -771,19 +857,31 @@ if [[ ${RSLT} -ne 0 ]]; then
   echo "Not sure what the problem is."
   echo
 else
+  printf "Docset installed. "
 
   #  Construct a temporary applescript file to tell Xcode to load a docset.
-  echo "Generating Xcode Docscript loader..."
+  printf "Generating Xcode Docset loader... "
   ${PATH_RM} -f "${PATH_WORK}/loadDocSet.scpt"
   echo "tell application \"Xcode\"" >> "${PATH_WORK}/loadDocSet.scpt"
   echo "load documentation set with path \"/Users/$USER/Library/Developer/Shared/Documentation/DocSets/$DOCSET_BUNDLE_ID.docset\"" >> "${PATH_WORK}/loadDocSet.scpt"
   echo "end tell" >> "${PATH_WORK}/loadDocSet.scpt"
+  echo "Finished!"
+  echo
 
   #  Run the load-docset applescript command.
   echo "Docset: /Users/$USER/Library/Developer/Shared/Documentation/DocSets/$DOCSET_BUNDLE_ID.docset"
 
-  echo "Loading Docscript into Xcode..."
-  # ${PATH_OSASCRIPT} "${PATH_WORK}/loadDocSet.scpt"
+  printf "Loading Docset into Xcode... "
+  RESP=$({ ${PATH_OSASCRIPT} "${PATH_WORK}/loadDocSet.scpt"; } 2>&1 )
+  RSLT=$?
+  if [[ ${RSLT} -ne 0 ]]; then
+    echo
+    echo "WARNING. Unable to copy load Docset into Xcode."
+    echo "Not sure what the problem is."
+    echo
+  fi
+  echo "Finished!"
+  echo
 fi
 
 exit 0
