@@ -169,6 +169,17 @@ function version {
   echo ${PROGNAME} ${VERSION};
 }
 
+function cleanup {
+  if [ -n "${PATH_WORK}" ] && [ -d "${PATH_WORK}" ]; then
+    printf "Cleaning up... "
+    if [[ $(isPathRoot "${PATH_ROOT}") -eq 0 ]]; then
+      $PATH_RM -rf "${PATH_WORK}"
+    fi
+    echo "Done"
+    echo
+  fi
+}
+
 # cleanString
 #
 # Pass a variable name and this function will determine its current value, clean
@@ -633,6 +644,7 @@ if [[ -d "${PATH_OUTPUT}" ]] && [[ $(isPathWriteable "${PATH_OUTPUT}") -ne 1 ]];
   echo "ABORTING. Unable to access Doxywrite output directory: ${PATH_OUTPUT}"
   echo "Must be a write permissions error."
   echo
+  cleanup
   exit 1
 elif [[ ! -d "${PATH_OUTPUT}" ]]; then
   printf "!!"
@@ -645,7 +657,7 @@ elif [[ ! -d "${PATH_OUTPUT}" ]]; then
     if [[ "no" == $(promptConfirm "Create output directory?") ]]
     then
       echo "Aborting."
-      exit 1
+      cleanup; exit 1
     fi
   fi
 
@@ -658,7 +670,7 @@ elif [[ ! -d "${PATH_OUTPUT}" ]]; then
     echo "ABORTING. Unable to create Doxywrite output diretory: ${PATH_OUTPUT}"
     echo "Not sure what the problem is."
     echo
-    exit 1
+    cleanup; exit 1
   fi
 
   echo
@@ -676,7 +688,7 @@ if [[ -f "${TMP_PATH_DOXY_CONFIG}" ]] && [[ ! -w "${TMP_PATH_DOXY_CONFIG}" ]]; t
   echo "ABORTING. Unable to access Doxygen config file: ${TMP_PATH_DOXY_CONFIG}"
   echo "Must be a write permissions error."
   echo
-  exit 1
+  cleanup; exit 1
 elif [[ ! -f "${TMP_PATH_DOXY_CONFIG}" ]]; then
   printf "!!"
   echo
@@ -688,7 +700,7 @@ elif [[ ! -f "${TMP_PATH_DOXY_CONFIG}" ]]; then
     if [[ "no" == $(promptConfirm "Create config file?") ]]
     then
       echo "Aborting."
-      exit 1
+      cleanup; exit 1
     fi
   fi
 
@@ -701,7 +713,7 @@ elif [[ ! -f "${TMP_PATH_DOXY_CONFIG}" ]]; then
     echo "ABORTING. Unable to create Doxygen config file: ${TMP_PATH_DOXY_CONFIG}"
     echo "Not sure what the problem is."
     echo
-    exit 1
+    cleanup; exit 1
   fi
 
   echo
@@ -724,7 +736,7 @@ if [[ -d "${TMP_PATH_DOXY_DOCSET}" ]] && [[ $(isPathWriteable "${TMP_PATH_DOXY_D
   echo "ABORTING. Unable to access Doxygen temp output directory: ${TMP_PATH_DOXY_DOCSET}"
   echo "Must be a write permissions error."
   echo
-  exit 1
+  cleanup; exit 1
 elif [[ ! -d "${TMP_PATH_DOXY_DOCSET}" ]]; then
   printf "!!"
   echo
@@ -736,7 +748,7 @@ elif [[ ! -d "${TMP_PATH_DOXY_DOCSET}" ]]; then
     if [[ "no" == $(promptConfirm "Create Doxygen temp output directory?") ]]
     then
       echo "Aborting."
-      exit 1
+      cleanup; exit 1
     fi
   fi
 
@@ -749,7 +761,7 @@ elif [[ ! -d "${TMP_PATH_DOXY_DOCSET}" ]]; then
     echo "ABORTING. Unable to create Doxygen temp output diretory: ${TMP_PATH_DOXY_DOCSET}"
     echo "Not sure what the problem is."
     echo
-    exit 1
+    cleanup; exit 1
   fi
 else
   echo "Found: ${TMP_PATH_DOXY_DOCSET}"
@@ -827,7 +839,7 @@ if [[ ${RSLT} -ne 0 ]]; then
   echo "ABORTING. Unable to generate documentation."
   echo "Not sure what the problem is."
   echo
-  exit 1
+  cleanup; exit 1
 else
   echo "Finished!"
   echo
@@ -853,7 +865,7 @@ RESP=$({ ${PATH_MAKE} -C "${TMP_PATH_DOXY_DOCSET}/html" install; } 2>&1 )
 RSLT=$?
 if [[ ${RSLT} -ne 0 ]]; then
   echo
-  echo "ABORTING. Unable to generate Docset loader script."
+  echo "WARNING. Unable to generate Docset loader script."
   echo "Not sure what the problem is."
   echo
 else
@@ -884,4 +896,4 @@ else
   echo
 fi
 
-exit 0
+cleanup; exit 0
