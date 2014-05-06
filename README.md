@@ -65,6 +65,24 @@ Doxywrite will look for a config file (.doxywrite.cfg) in the current directory.
 	
 The ability to specify a config file path is how you can create different Doxwrite config files for each target in your project.
 
+### Xcode Environment Var Import
+With the -x (xcodeenv) flag specified, Doxywrite will import a few of the environment variables defined in Xcode and apply them accordingly:
+
+Xcode Var          | Doxywrite Var        | Doxywrite Flag
+---------          |
+PROJECT_NAME       | DOCSET_PROJECT_NAME  | none
+SOURCE_ROOT        | PATH_ROOT            | -r rDirPath
+TARGET_TEMP_DIR    | PATH_WORK            | -w wDirPath
+
+### Parameter Value Preference
+Configured values are considered in this order of preference where each subsequent level is awarded a higher preference:
+
+* Xcode Environment Vars
+* .doxywrite.cfg (config file)
+* command line options (flag and parameters)
+
+As you can see, command line options are always given the highest preference.
+
 ### Documentation Output
 Doxwrite will place a copy of the generated documentation into the root directory of your project or into the directory specified with the -o (path-output) flag.
 
@@ -73,6 +91,19 @@ Doxwrite will place a copy of the generated documentation into the root director
 ## Xcode Run-Script
 You can setup a run-script in Xcode to automate the process of generating updated documentation sets.
 
+The run-script shell should point to /bin/sh, and the script itself will just call the Doxywrite script with relevant flags and options specified. In general, a common configuration would look like this:
+
+	/Users/USERNAME/MYPROJECT/.doxywrite.sh -f -x MyTarget
+
+In this example above, the script is invoked with the -f (force) flag and the -x (xcodeenv) flag so enabled to override prompts (e.g. for creation of missing directories) and to import environment variables from Xcode. Doxywrite will end up using Xcode's project/target temp directory to set wDirPath (PATH_WORK).
+
+The following example specifies an alternative temp directory:
+	
+	/Users/USERNAME/MYPROJECT/.doxywrite.sh -f -x -t /tmp/DOXYTEMP MyTarget
+
+The temp directory will be removed once Doxywrite has finished.
+
+### Xcode Aggregate Target Setup
 **--TBD--**
 
 ## Bugs and such

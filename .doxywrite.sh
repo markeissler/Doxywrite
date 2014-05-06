@@ -75,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.0
+VERSION=1.1.2
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -85,6 +85,7 @@ PATH_OSASCRIPT="/usr/bin/osascript"
 # reset internal vars (do not touch these here)
 DEBUG=0
 FORCEEXEC=0
+XCODEENV=0
 GETOPT_OLD=0
 TARGETNAME=""
 PATH_ROOT=""
@@ -129,6 +130,7 @@ OPTIONS:
    -s, --path-search sDirPath   Path to directory for files to search
    -o, --path-output oDirPath   Path to output directory (default: project root)
    -w, --path-temp   wDirPath   Path to temporary directory (default: /tmp)
+   -x, --xcodeenv               Import Xcode environment variables
    -f, --force                  Execute updates without user prompt
    -h, --help                   Show this message
    -v, --version                Output version of this script
@@ -151,6 +153,7 @@ OPTIONS:
    -s sDirPath                  Path to directory for files to search
    -o oDirPath                  Path to output directory (default: project root)
    -w wDirPath                  Path to temporary directory (default: /tmp)
+   -x                           Import Xcode environment variables
    -f                           Execute updates without user prompt
    -h                           Show this message
    -v                           Output version of this script
@@ -353,12 +356,12 @@ getopt -T > /dev/null
 if [ $? -eq 4 ]; then
   # GNU enhanced getopt is available
   PROGNAME=`basename $0`
-  params="$(getopt --name "$PROGNAME" --long path-config:,path-root:,path-search:,path-output:,path-work:,force,help,version,debug --options c:r:s:o:w:fhvd -- "$@")"
+  params="$(getopt --name "$PROGNAME" --long path-config:,path-root:,path-search:,path-output:,path-work:,xcodeenv,force,help,version,debug --options c:r:s:o:w:xfhvd -- "$@")"
 else
   # Original getopt is available
   GETOPT_OLD=1
   PROGNAME=`basename $0`
-  params="$(getopt c:r:s:o:w:fhvd "$@")"
+  params="$(getopt c:r:s:o:w:xfhvd "$@")"
 fi
 
 # check for invalid params passed; bail out if error is set.
@@ -377,6 +380,7 @@ while [ $# -gt 0 ]; do
     -s | --path-search)     cli_SEARCHPATH="$2"; shift;;
     -o | --path-output)     cli_OUTPUTPATH="$2"; shift;;
     -w | --path-work)       cli_WORKPATH="$2"; shift;;
+    -x | --xcodeenv)        cli_XCODEENV=1; XCODEENV=${cli_XCODEENV};;
     -d | --debug)           cli_DEBUG=1; DEBUG=${cli_DEBUG};;
     -f | --force)           cli_FORCEEXEC=1;;
     -v | --version)         version; exit;;
@@ -408,6 +412,32 @@ else
   echo "FATAL. Something is wrong with this system. Unable to find standard sed."
   echo
   exit 1
+fi
+
+# Clean up and import Xcode environment variables
+#
+# PROJECT_NAME -> DOCSET_PROJECT_NAME
+# SOURCE_ROOT -> PATH_ROOT
+# TARGET_TEMP_DIR -> PATH_WORK
+#
+if [ "${XCODEENV}" -ne 0 ]; then
+  if [ -n "${PROJECT_NAME}" ]; then
+    env_PROJECT_NAME="${PROJECT_NAME}"
+    cleanString env_PROJECT_NAME
+    DOCSET_PROJECT_NAME="${env_PROJECT_NAME}"
+  fi
+
+  if [ -n "${SOURCE_ROOT}" ]; then
+    env_SOURCE_ROOT="${SOURCE_ROOT}"
+    cleanString env_SOURCE_ROOT
+    PATH_ROOT="${env_SOURCE_ROOT}"
+  fi
+
+  if [ -n "${TARGET_TEMP_DIR}" ]; then
+    env_TARGET_TEMP_DIR="${TARGET_TEMP_DIR}"
+    cleanString env_TARGET_TEMP_DIR
+    PATH_WORK="${env_TARGET_TEMP_DIR}"
+  fi
 fi
 
 # Grab our config file path from the cli if provided
