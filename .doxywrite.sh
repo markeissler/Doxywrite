@@ -40,6 +40,8 @@ PATH_MAKE="/usr/bin/make"
 PATH_CP="/bin/cp"
 PATH_RM="/bin/rm"
 PATH_TOUCH="/usr/bin/touch"
+PATH_BASENAME="/usr/bin/basename"
+PATH_DIRNAME="/usr/bin/dirname"
 
 # Install gnu grep via homebrew... (this will not symlink for you)
 #
@@ -450,13 +452,25 @@ fi
 # load config
 echo
 printf "Checking for a config file... "
-if [ -s "${PATH_CONFIG}" ]; then
+if [ -s "${PATH_CONFIG}" ] && [ -r "${PATH_CONFIG}" ]; then
   source "${PATH_CONFIG}" &> /dev/null
 else
   printf "!!"
   echo
   echo "ABORTING. The doxywrite config file ("${PATH_CONFIG}") is missing or empty!"
   echo
+  _configDir=$(${PATH_DIRNAME} "${PATH_CONFIG}")
+  _configExample="${_configDir}/.doxywrite-example.cfg"
+  if [ -f "${_configExample}" ]; then
+    echo "It looks like the example config file exists in the same location: "
+    echo
+    echo "     ${_configExample}"
+    echo
+    echo "Did you remember to customize and appropriately rename a copy of the example?"
+    echo
+  fi
+  unset _configDir
+  unset _configExample
   exit 1
 fi
 echo "Found: ${PATH_CONFIG}"
