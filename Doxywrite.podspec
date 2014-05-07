@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.preserve_paths = ".doxywrite.sh", ".doxywrite.cfg"
   s.requires_arc   = false
   s.prepare_command = <<-CMD
-      cp ".doxywrite-wrapper.sh" "../../.doxywrite-example.sh"
+      cp ".doxywrite-wrapper.sh" "../../.doxywrite.sh"
       if [ ! -f "../../.doxywrite.cfg" ]; then
         cp ".doxywrite-example.cfg" "../../.doxywrite-example.cfg"
       fi
