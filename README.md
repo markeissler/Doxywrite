@@ -17,12 +17,28 @@ For a release build:
 
 For a development build:
 
-	pod "Reader", :git => "https://github.com/markeissler/Doxywrite.git", 
+	pod "Reader", :git => "https://github.com/markeissler/Doxywrite.git",
 	    :branch => 'develop'
 
 **NOTE:** When installing with [Cocoapods](http://cocoapods.org), the installation script will copy the .doxywrite-wrapper.sh script into your project root directory, renaming it to ".doxywrite.sh" along the way. This script will call the actual script in the Pods directory. You may want to add the following alias to your .bashrc file to make it easier to call doxywrite manually:
 
 	alias doxywrite="sh .doxywrite.sh"
+
+### .gitignore
+Because you can easily re-install Doxywrite with [Cocoapods](http://cocoapods.org), your .gitignore file should likely contain the following:
+
+	# Doxywrite
+	.doxywrite.sh
+	.doxywrite-example.cfg
+	
+The only Doxywrite file you will want to checkin to your repo is your customized .doxywrite.cfg file.
+
+### Updating
+Once again, [Cocoapods](http://cocoapods.org) makes it easy to update to the latest version of Doxywrite:
+
+	>pod update Doxywrite
+	
+Your .doxywrite.cfg file never be overwritten during an update. Also, the example config will only be copied over to your project if the installation process detects that no .doxywrite.cfg file is present.
 
 ### Config file
 Renamed the provided ".doxywrite-example.cfg" file to ".doxywrite.cfg". At a minimum, you should setup the following parameters in the configuration file:
@@ -32,16 +48,16 @@ Renamed the provided ".doxywrite-example.cfg" file to ".doxywrite.cfg". At a min
 	DOCSET_PUBLISHER_ID="com.yourdomain.projectname"
 	DOCSET_PUBLISHER_NAME="Your Company Name"
 
-	
+
 ### Script PATHs
 Verify paths to grep, sed, doxygen:
 
 	PATH_GREP="/usr/local/bin/ggrep"
 	PATH_SED="/usr/local/bin/gsed"
 	PATH_DOXYGEN="/usr/local/bin/doxygen"
-	
+
 It is unlikely you'll have to edit any remaining PATHs that are defined in the script as they point to system defaults.
-	
+
 The custom path to grep is absolutely necessary as it must point to GNU grep), which is not installed on current distributions of OSX. As noted in the .doxywrite.cfg file, you can install GNU grep using [homebrew](http://brew.sh/):
 
 	>brew tap homebrew/dupes
@@ -52,23 +68,23 @@ The above commands will install the GNU grep as "ggrep" (instead of just "grep")
 You will also need to install GNU sed in the same way:
 
 	>brew install gnu-sed
-	
+
 The above commands will install the new sed as "gsed" so you can avoid any potential conflicts with the BSD version of grep native to OSX.
 
 To install doxygen, once again, use [homebrew](http://brew.sh/):
 
 	>brew install doxygen
-	
+
 ### Class Diagram Support
 To support the generation of class diagrams, you will need to have dot installed. To get dot, just install graphiz using [homebrew](http://brew.sh/):
 
 	>brew install graphviz
-	
+
 ## Usage
 Once you're ready to generate a DocSet just run Xcodebump from the top level of your project.
 
 	>sh ./.doxywrite MyTarget
-	
+
 To get a list of supported command line flags and parameters:
 
 	>sh ./.doxywrite -h
@@ -78,7 +94,7 @@ In general, options specified on the command line will override defaults and tho
 Doxywrite will look for a config file (.doxywrite.cfg) in the current directory. You can also specify a path on the command line:
 
 	>sh ./.doxywrite.sh -c ./MyProject/MyTarget-doxywrite.cfg MyTarget
-	
+
 The ability to specify a config file path is how you can create different Doxwrite config files for each target in your project.
 
 ### Xcode Environment Var Import
@@ -114,7 +130,7 @@ The run-script shell should point to /bin/sh, and the script itself will just ca
 In this example above, the script is invoked with the -f (force) flag and the -x (xcodeenv) flag so enabled to override prompts (e.g. for creation of missing directories) and to import environment variables from Xcode. Doxywrite will end up using Xcode's project/target temp directory to set wDirPath (PATH_WORK).
 
 The following example specifies an alternative temp directory:
-	
+
 	/Users/USERNAME/MYPROJECT/.doxywrite.sh -f -x -t /tmp/DOXYTEMP MyTarget
 
 The temp directory will be removed once Doxywrite has finished.
