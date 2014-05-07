@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   DESC
   s.homepage       = "https://github.com/markeissler/Doxywrite"
   s.source         = { :git => "https://github.com/markeissler/Doxywrite.git", :tag => "mx-#{s.version}" }
-  s.preserve_paths = ".doxywrite.sh", ".doxywrite.cfg"
+  s.preserve_paths = ".doxywrite.sh", ".doxywrite-wrapper.sh", ".doxywrite-example.cfg"
   s.requires_arc   = false
   s.prepare_command = <<-CMD
       cp ".doxywrite-wrapper.sh" "../../.doxywrite.sh"
