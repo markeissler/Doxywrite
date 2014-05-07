@@ -3,10 +3,8 @@
 # STEmacsModelines:
 # -*- Shell-Unix-Generic -*-
 #
-# At some point this was based on the following work by Shakthi on Github:
-# https://github.com/Shakthi/sqlstl/blob/master/doxygen-xcode-script.sh
 
-# Copyright (c) 2014 Mark Eissler
+# Copyright (c) 2014 Mark Eissler, mark@mixtur.com
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -77,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.2
+VERSION=1.1.3
 PROGNAME=`basename $0`
 
 # standard config file location

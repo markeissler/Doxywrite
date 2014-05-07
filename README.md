@@ -8,13 +8,29 @@ Copy .doxrywrite.sh (script) and .doxywrite.cfg (config) files into the top-leve
 
 **NOTE:** It is intended that you copy **both** of these files into your project so that you won't have to worry about future changes to this code.
 
+### Cocoapods
+The easiest way to install Doxywrite is with [Cocoapods](http://cocoapods.org)! Add the following dependency to your project's podfile...
+
+For a release build:
+
+	pod "Doxywrite", :git => "https://github.com/markeissler/Doxywrite.git"
+
+For a development build:
+
+	pod "Reader", :git => "https://github.com/markeissler/Doxywrite.git", 
+	    :branch => 'develop'
+
+**NOTE:** When installing with [Cocoapods](http://cocoapods.org), the installation script will copy the .doxywrite-wrapper.sh script into your project root directory, renaming it to ".doxywrite.sh" along the way. This script will call the actual script in the Pods directory. You may want to add the following alias to your .bashrc file to make it easier to call doxywrite manually:
+
+	alias doxywrite="sh .doxywrite.sh"
+
 ### Config file
-At a minimum, you should setup the following parameters in the configuration file:
+Renamed the provided ".doxywrite-example.cfg" file to ".doxywrite.cfg". At a minimum, you should setup the following parameters in the configuration file:
 
 	DOCSET_PROJECT_NAME="MyProject"
 	DOCSET_BUNDLE_ID="com.yourdomain.projectname"
 	DOCSET_PUBLISHER_ID="com.yourdomain.projectname"
-	DOCSET_PUBLISHER_NAME="Publisher"
+	DOCSET_PUBLISHER_NAME="Your Company Name"
 
 	
 ### Script PATHs
@@ -104,7 +120,9 @@ The following example specifies an alternative temp directory:
 The temp directory will be removed once Doxywrite has finished.
 
 ### Xcode Aggregate Target Setup
-**--TBD--**
+A clean way to setup automated documentation generation is to add an *Aggregate Target* to your Xcode project, possibly named "Documentation." See the following url for an excellent guide on how to do this:
+
+[http://www.simplicate.info/1/post/2013/07/using-appledoc-to-generate-xcode-help-part-1.html](http://www.simplicate.info/1/post/2013/07/using-appledoc-to-generate-xcode-help-part-1.html)
 
 ## Bugs and such
 
