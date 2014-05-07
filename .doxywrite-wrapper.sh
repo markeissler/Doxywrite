@@ -29,5 +29,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+PATH_DOXYWRITE="Pods/Doxywrite/.doxywrite.sh"
+if [ ! -x "${PATH_DOXYWRITE}" ]; then
+  echo "Unable to find Doxywrite. Have you installed it? If not, update your"
+  echo "Podfile and then run:"
+  echo
+  echo "     >pod install"
+  echo
+  echo "For more information on Doxywrite, follow this link:"
+  echo
+  echo "     https://github.com/markeissler/Doxywrite"
+  echo
+  exit 1
+fi
 
-Pods/Doxywrite/.doxywrite.sh ${1}
+# run it and pass-through cli options!
+${PATH_DOXYWRITE} ${1}
