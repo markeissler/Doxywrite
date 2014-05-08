@@ -4,7 +4,7 @@ This script makes it easy to generate a DocSet from your Xcode project via Doxyg
 
 ## Installation
 
-Copy .doxrywrite.sh (script) and .doxywrite.cfg (config) files into the top-level of your Xcode project. Edit the config file parameters and PATH parameters in the script as needed.
+Copy .doxywrite.sh (script) and .doxywrite.cfg (config) files into the top-level of your Xcode project. Edit the config file parameters and PATH parameters in the script as needed.
 
 **NOTE:** It is intended that you copy **both** of these files into your project so that you won't have to worry about future changes to this code.
 
@@ -44,9 +44,9 @@ Your .doxywrite.cfg file never be overwritten during an update. Also, the exampl
 Renamed the provided ".doxywrite-example.cfg" file to ".doxywrite.cfg". At a minimum, you should setup the following parameters in the configuration file:
 
 	DOCSET_PROJECT_NAME="MyProject"
-	DOCSET_BUNDLE_ID="com.yourdomain.projectname"
-	DOCSET_PUBLISHER_ID="com.yourdomain.projectname"
-	DOCSET_PUBLISHER_NAME="Your Company Name"
+	DOCSET_BUNDLE_ID="com.yourdomain.MyProject"
+	DOCSET_PUBLISHER_ID="com.yourdomain.MyProject"
+	DOCSET_PUBLISHER_NAME="Publisher"
 
 
 ### Script PATHs
@@ -101,7 +101,7 @@ The ability to specify a config file path is how you can create different Doxwri
 With the -x (xcodeenv) flag specified, Doxywrite will import a few of the environment variables defined in Xcode and apply them accordingly:
 
 Xcode Var          | Doxywrite Var        | Doxywrite Flag
----------          |
+---------          | -------------        | --------------
 PROJECT_NAME       | DOCSET_PROJECT_NAME  | none
 SOURCE_ROOT        | PATH_ROOT            | -r rDirPath
 TARGET_TEMP_DIR    | PATH_WORK            | -w wDirPath
@@ -125,15 +125,26 @@ You can setup a run-script in Xcode to automate the process of generating update
 
 The run-script shell should point to /bin/sh, and the script itself will just call the Doxywrite script with relevant flags and options specified. In general, a common configuration would look like this:
 
-	/Users/USERNAME/MYPROJECT/.doxywrite.sh -f -x MyTarget
+	/bin/sh /Users/USERNAME/MYPROJECT/.doxywrite.sh -f -x MyTarget
 
 In this example above, the script is invoked with the -f (force) flag and the -x (xcodeenv) flag so enabled to override prompts (e.g. for creation of missing directories) and to import environment variables from Xcode. Doxywrite will end up using Xcode's project/target temp directory to set wDirPath (PATH_WORK).
 
 The following example specifies an alternative temp directory:
 
-	/Users/USERNAME/MYPROJECT/.doxywrite.sh -f -x -t /tmp/DOXYTEMP MyTarget
+	/bin/sh /Users/USERNAME/MYPROJECT/.doxywrite.sh -f -x -t /tmp/DOXYTEMP MyTarget
 
 The temp directory will be removed once Doxywrite has finished.
+
+**NOTE:** Don't forget to add either "sh" or "/bin/sh" to the front of the script invocation. See **Permissions**.
+
+### Permissions
+Xcode will likely complain with a "Build Failed" message unless you do one of the following:
+
+* Add "/bin/sh" or "sh" to the front of the script invocation as indicated in the above examples;
+* Set the execute bits on the .doxywrite.sh wrapper script (e.g. "chmod 755")
+
+Of the above two options, the preferred method is to explicitly invoke the shell ahead of the script.
+
 
 ### Xcode Aggregate Target Setup
 A clean way to setup automated documentation generation is to add an *Aggregate Target* to your Xcode project, possibly named "Documentation." See the following url for an excellent guide on how to do this:
