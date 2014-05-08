@@ -44,4 +44,4 @@ if [ ! -x "${PATH_DOXYWRITE}" ]; then
 fi
 
 # run it and pass-through cli options!
-${PATH_DOXYWRITE} ${1}
+${PATH_DOXYWRITE} "${@}"
