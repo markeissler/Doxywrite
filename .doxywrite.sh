@@ -101,8 +101,8 @@ TMP_PATH_DOXY_CONFIG=".doxyfile.cfg"
 
 # doxygen config
 DOCSET_PROJECT_NAME="MyProject"
-DOCSET_BUNDLE_ID="com.yourdomain.projectname"
-DOCSET_PUBLISHER_ID="com.yourdomain.projectname"
+DOCSET_BUNDLE_ID="com.yourdomain.MyProject"
+DOCSET_PUBLISHER_ID="com.yourdomain.MyProject"
 DOCSET_PUBLISHER_NAME="Publisher"
 DOCSET_PAGE_MAIN="README.md"
 
