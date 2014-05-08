@@ -1,12 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 #
 # STEmacsModelines:
 # -*- Shell-Unix-Generic -*-
 #
-# At some point this was based on the following work by Shakthi on Github:
-# https://github.com/Shakthi/sqlstl/blob/master/doxygen-xcode-script.sh
 
-# Copyright (c) 2014 Mark Eissler
+# Copyright (c) 2014 Mark Eissler, mark@mixtur.com
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +38,8 @@ PATH_MAKE="/usr/bin/make"
 PATH_CP="/bin/cp"
 PATH_RM="/bin/rm"
 PATH_TOUCH="/usr/bin/touch"
+PATH_BASENAME="/usr/bin/basename"
+PATH_DIRNAME="/usr/bin/dirname"
 
 # Install gnu grep via homebrew... (this will not symlink for you)
 #
@@ -75,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.2
+VERSION=1.1.3
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -450,13 +450,25 @@ fi
 # load config
 echo
 printf "Checking for a config file... "
-if [ -s "${PATH_CONFIG}" ]; then
+if [ -s "${PATH_CONFIG}" ] && [ -r "${PATH_CONFIG}" ]; then
   source "${PATH_CONFIG}" &> /dev/null
 else
   printf "!!"
   echo
   echo "ABORTING. The doxywrite config file ("${PATH_CONFIG}") is missing or empty!"
   echo
+  _configDir=$(${PATH_DIRNAME} "${PATH_CONFIG}")
+  _configExample="${_configDir}/.doxywrite-example.cfg"
+  if [ -f "${_configExample}" ]; then
+    echo "It looks like the example config file exists in the same location: "
+    echo
+    echo "     ${_configExample}"
+    echo
+    echo "Did you remember to customize and appropriately rename a copy of the example?"
+    echo
+  fi
+  unset _configDir
+  unset _configExample
   exit 1
 fi
 echo "Found: ${PATH_CONFIG}"
@@ -808,13 +820,19 @@ ${PATH_SED} -i -r "s#^DOCSET_BUNDLE_ID\ *=.*#DOCSET_BUNDLE_ID = \"${DOCSET_BUNDL
 ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER\ *=.*#DOCSET_PUBLISHER = \"${DOCSET_PUBLISHER_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER_ID\ *=.*#DOCSET_PUBLISHER_ID = \"${DOCSET_PUBLISHER_ID}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 
+# Exclude Cocoapods
+${PATH_SED} -i -r "s#^EXCLUDE_PATTERNS\ *=.*#EXCLUDE_PATTERNS = */Pods/*#g" "${TMP_PATH_DOXY_CONFIG}"
+
 # Use the README.md file as the main page (index.html)
 ${PATH_SED} -i -r "s#^USE_MDFILE_AS_MAINPAGE\ *=.*#USE_MDFILE_AS_MAINPAGE = ${DOCSET_PAGE_MAIN}#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Follow directory trees recursively
+${PATH_SED} -i -r "s#^RECURSIVE\ *=.*#RECURSIVE = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
 # Tell doxygen to generate a docset.
 ${PATH_SED} -i -r "s#^GENERATE_DOCSET\ *=.*#GENERATE_DOCSET = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
-${PATH_SED} -i -r "s#^RECURSIVE\ *=.*#RECURSIVE = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Don't generate LATEX output.
 ${PATH_SED} -i -r "s#^GENERATE_LATEX\ *=.*#GENERATE_LATEX = NO#g" "${TMP_PATH_DOXY_CONFIG}"
 
 # Don't repeat the @brief description in the extended class and method descriptions.
