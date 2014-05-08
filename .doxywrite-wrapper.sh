@@ -30,7 +30,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 PATH_DOXYWRITE="Pods/Doxywrite/.doxywrite.sh"
-if [ ! -x "${PATH_DOXYWRITE}" ]; then
+if [ ! -f "${PATH_DOXYWRITE}" ]; then
   echo "Unable to find Doxywrite. Have you installed it? If not, update your"
   echo "Podfile and then run:"
   echo
@@ -44,4 +44,4 @@ if [ ! -x "${PATH_DOXYWRITE}" ]; then
 fi
 
 # run it and pass-through cli options!
-${PATH_DOXYWRITE} "${@}"
+/bin/sh ${PATH_DOXYWRITE} "${@}"

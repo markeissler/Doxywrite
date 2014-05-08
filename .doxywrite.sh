@@ -75,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.6
+VERSION=1.1.7
 PROGNAME=`basename $0`
 
 # standard config file location

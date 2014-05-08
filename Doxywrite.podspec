@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name           = "Doxywrite"
-  s.version        = "1.1.6"
+  s.version        = "1.1.7"
   s.license        = "MIT"
   s.authors        = { "Mark Eissler" => "mark@mixtur.com" }
   s.summary        = "Generate and install a DocSet from your Xcode project via Doxygen."
