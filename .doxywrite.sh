@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # STEmacsModelines:
 # -*- Shell-Unix-Generic -*-
@@ -820,13 +820,19 @@ ${PATH_SED} -i -r "s#^DOCSET_BUNDLE_ID\ *=.*#DOCSET_BUNDLE_ID = \"${DOCSET_BUNDL
 ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER\ *=.*#DOCSET_PUBLISHER = \"${DOCSET_PUBLISHER_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER_ID\ *=.*#DOCSET_PUBLISHER_ID = \"${DOCSET_PUBLISHER_ID}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 
+# Exclude Cocoapods
+${PATH_SED} -i -r "s#^EXCLUDE_PATTERNS\ *=.*#EXCLUDE_PATTERNS = */Pods/*#g" "${TMP_PATH_DOXY_CONFIG}"
+
 # Use the README.md file as the main page (index.html)
 ${PATH_SED} -i -r "s#^USE_MDFILE_AS_MAINPAGE\ *=.*#USE_MDFILE_AS_MAINPAGE = ${DOCSET_PAGE_MAIN}#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Follow directory trees recursively
+${PATH_SED} -i -r "s#^RECURSIVE\ *=.*#RECURSIVE = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
 # Tell doxygen to generate a docset.
 ${PATH_SED} -i -r "s#^GENERATE_DOCSET\ *=.*#GENERATE_DOCSET = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
-${PATH_SED} -i -r "s#^RECURSIVE\ *=.*#RECURSIVE = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Don't generate LATEX output.
 ${PATH_SED} -i -r "s#^GENERATE_LATEX\ *=.*#GENERATE_LATEX = NO#g" "${TMP_PATH_DOXY_CONFIG}"
 
 # Don't repeat the @brief description in the extended class and method descriptions.
