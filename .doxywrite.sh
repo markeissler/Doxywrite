@@ -75,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.3
+VERSION=1.1.4
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -405,7 +405,7 @@ fi
 #
 if [[ -n "${PATH_SED}" ]] && [[ -x "${PATH_SED}" ]]; then
   PATH_STD_SED="${PATH_SED}"
-elif [[ -x "/usr/bin/seds" ]]; then
+elif [[ -x "/usr/bin/sed" ]]; then
   PATH_STD_SED="/usr/bin/sed"
 else
   echo
