@@ -17,7 +17,7 @@ For a release build:
 
 For a development build:
 
-	pod "Reader", :git => "https://github.com/markeissler/Doxywrite.git",
+	pod "Doxywrite", :git => "https://github.com/markeissler/Doxywrite.git",
 	    :branch => 'develop'
 
 **NOTE:** When installing with [Cocoapods](http://cocoapods.org), the installation script will copy the .doxywrite-wrapper.sh script into your project root directory, renaming it to ".doxywrite.sh" along the way. This script will call the actual script in the Pods directory. You may want to add the following alias to your .bashrc file to make it easier to call doxywrite manually:
@@ -41,7 +41,7 @@ Once again, [Cocoapods](http://cocoapods.org) makes it easy to update to the lat
 Your .doxywrite.cfg file never be overwritten during an update. Also, the example config will only be copied over to your project if the installation process detects that no .doxywrite.cfg file is present.
 
 ### Config file
-Renamed the provided ".doxywrite-example.cfg" file to ".doxywrite.cfg". At a minimum, you should setup the following parameters in the configuration file:
+Rename the provided ".doxywrite-example.cfg" file to ".doxywrite.cfg". At a minimum, you should setup the following parameters in the configuration file:
 
 	DOCSET_PROJECT_NAME="MyProject"
 	DOCSET_BUNDLE_ID="com.yourdomain.MyProject"
@@ -81,7 +81,7 @@ To support the generation of class diagrams, you will need to have dot installed
 	>brew install graphviz
 
 ## Usage
-Once you're ready to generate a DocSet just run Xcodebump from the top level of your project.
+Once you're ready to generate a DocSet just run Doxywrite from the top level of your project.
 
 	>sh ./.doxywrite MyTarget
 
@@ -157,7 +157,7 @@ Submit bugs by opening an issue on this project's github page.
 
 ## License
 
-Xcodebump is licensed under the MIT open source license.
+Doxywrite is licensed under the MIT open source license.
 
 ## Appreciation
 Like this script? Let me know! You can send some kudos my way courtesy of Flattr:
