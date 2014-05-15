@@ -121,7 +121,7 @@ Doxwrite will place a copy of the generated documentation into the root director
 **NOTE:** You may want to add the "Documentation" directory to your project's *.gitignore* file.
 
 ### Docset Installation
-As of Doxywrite 1.8.0, installation of the generated Docset is optional. To install a Docset on your system, specify the -a (add-docset) flag.
+As of Doxywrite 1.1.8, installation of the generated Docset is optional. To install a Docset on your system, specify the -a (add-docset) flag.
 
 ## Xcode Run-Script
 You can setup a run-script in Xcode to automate the process of generating updated documentation sets.
