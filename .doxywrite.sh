@@ -75,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.7
+VERSION=1.1.8
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -83,6 +83,7 @@ PATH_CONFIG=".doxywrite.cfg"
 PATH_OSASCRIPT="/usr/bin/osascript"
 
 # reset internal vars (do not touch these here)
+ADDDOCSET=0
 DEBUG=0
 FORCEEXEC=0
 XCODEENV=0
@@ -121,16 +122,17 @@ function usage_new {
 cat << EOF
 usage: ${PROGNAME} [options] targetName
 
-Generate a docset for an xcode project identified by targetName.
+Generate a Docset for an xcode project identified by targetName.
 
 OPTIONS:
-   -d, --debug                  Turn debugging on (increases verbosity)
+   -a, --add-docset             Add Docset to system
    -c, --path-config cFilePath  Path to config file (default: .doxywrite.cfg)
    -r, --path-root   rDirPath   Path to project root directory
    -s, --path-search sDirPath   Path to directory for files to search
    -o, --path-output oDirPath   Path to output directory (default: project root)
    -w, --path-temp   wDirPath   Path to temporary directory (default: /tmp)
    -x, --xcodeenv               Import Xcode environment variables
+   -d, --debug                  Turn debugging on (increases verbosity)
    -f, --force                  Execute updates without user prompt
    -h, --help                   Show this message
    -v, --version                Output version of this script
@@ -144,16 +146,17 @@ function usage_old {
 cat << EOF
 usage: ${PROGNAME} [options] targetName
 
-Generate a docset for the the xcode project.
+Generate a Docset for an xcode project identified by targetName.
 
 OPTIONS:
-   -d                           Turn debugging on (increases verbosity)
+   -a                           Add Docset to system
    -c cFilePath                 Path to config file (default: .doxywrite.cfg)
    -r rDirPath                  Path to project root directory
    -s sDirPath                  Path to directory for files to search
    -o oDirPath                  Path to output directory (default: project root)
    -w wDirPath                  Path to temporary directory (default: /tmp)
    -x                           Import Xcode environment variables
+   -d                           Turn debugging on (increases verbosity)
    -f                           Execute updates without user prompt
    -h                           Show this message
    -v                           Output version of this script
@@ -341,6 +344,7 @@ function promptConfirm() {
 # parse cli parameters
 #
 # Our options:
+#   --add-docset, a
 #   --path-config, c
 #   --path-root, r
 #   --path-search, s
@@ -356,12 +360,12 @@ getopt -T > /dev/null
 if [ $? -eq 4 ]; then
   # GNU enhanced getopt is available
   PROGNAME=`basename $0`
-  params="$(getopt --name "$PROGNAME" --long path-config:,path-root:,path-search:,path-output:,path-work:,xcodeenv,force,help,version,debug --options c:r:s:o:w:xfhvd -- "$@")"
+  params="$(getopt --name "$PROGNAME" --long add-docset,path-config:,path-root:,path-search:,path-output:,path-work:,xcodeenv,force,help,version,debug --options ac:r:s:o:w:xfhvd -- "$@")"
 else
   # Original getopt is available
   GETOPT_OLD=1
   PROGNAME=`basename $0`
-  params="$(getopt c:r:s:o:w:xfhvd "$@")"
+  params="$(getopt ac:r:s:o:w:xfhvd "$@")"
 fi
 
 # check for invalid params passed; bail out if error is set.
@@ -375,6 +379,7 @@ unset params
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    -a | --add-docset)      cli_ADDDOCSET=1; ADDDOCSET=${cli_ADDDOCSET};;
     -c | --path-config)     cli_CONFIGPATH="$2"; shift;;
     -r | --path-root)       cli_ROOTPATH="$2"; shift;;
     -s | --path-search)     cli_SEARCHPATH="$2"; shift;;
@@ -879,7 +884,7 @@ else
 fi
 
 # Run doxygen on the updated config file.
-printf "Generating documentation docset..."
+printf "Generating documentation Docset..."
 RESP=$({ $PATH_DOXYGEN "${TMP_PATH_DOXY_CONFIG}"; } 2>&1 )
 RSLT=$?
 if [[ ${RSLT} -ne 0 ]]; then
@@ -908,40 +913,42 @@ else
 fi
 
 # Install docset via docsetutil.
-echo "Installing docset..."
-RESP=$({ ${PATH_MAKE} -C "${TMP_PATH_DOXY_DOCSET}/html" install; } 2>&1 )
-RSLT=$?
-if [[ ${RSLT} -ne 0 ]]; then
-  echo
-  echo "WARNING. Unable to generate Docset loader script."
-  echo "Not sure what the problem is."
-  echo
-else
-  printf "Docset installed. "
-
-  #  Construct a temporary applescript file to tell Xcode to load a docset.
-  printf "Generating Xcode Docset loader... "
-  ${PATH_RM} -f "${PATH_WORK}/loadDocSet.scpt"
-  echo "tell application \"Xcode\"" >> "${PATH_WORK}/loadDocSet.scpt"
-  echo "load documentation set with path \"/Users/$USER/Library/Developer/Shared/Documentation/DocSets/$DOCSET_BUNDLE_ID.docset\"" >> "${PATH_WORK}/loadDocSet.scpt"
-  echo "end tell" >> "${PATH_WORK}/loadDocSet.scpt"
-  echo "Finished!"
-  echo
-
-  #  Run the load-docset applescript command.
-  echo "Docset: /Users/$USER/Library/Developer/Shared/Documentation/DocSets/$DOCSET_BUNDLE_ID.docset"
-
-  printf "Loading Docset into Xcode... "
-  RESP=$({ ${PATH_OSASCRIPT} "${PATH_WORK}/loadDocSet.scpt"; } 2>&1 )
+if [ "${ADDDOCSET}" -ne 0 ]; then
+  echo "Installing Docset..."
+  RESP=$({ ${PATH_MAKE} -C "${TMP_PATH_DOXY_DOCSET}/html" install; } 2>&1 )
   RSLT=$?
   if [[ ${RSLT} -ne 0 ]]; then
     echo
-    echo "WARNING. Unable to copy load Docset into Xcode."
+    echo "WARNING. Unable to generate Docset loader script."
     echo "Not sure what the problem is."
     echo
+  else
+    printf "Docset installed. "
+
+    #  Construct a temporary applescript file to tell Xcode to load a docset.
+    printf "Generating Xcode Docset loader... "
+    ${PATH_RM} -f "${PATH_WORK}/loadDocSet.scpt"
+    echo "tell application \"Xcode\"" >> "${PATH_WORK}/loadDocSet.scpt"
+    echo "load documentation set with path \"/Users/$USER/Library/Developer/Shared/Documentation/DocSets/$DOCSET_BUNDLE_ID.docset\"" >> "${PATH_WORK}/loadDocSet.scpt"
+    echo "end tell" >> "${PATH_WORK}/loadDocSet.scpt"
+    echo "Finished!"
+    echo
+
+    #  Run the load-docset applescript command.
+    echo "Docset: /Users/$USER/Library/Developer/Shared/Documentation/DocSets/$DOCSET_BUNDLE_ID.docset"
+
+    printf "Loading Docset into Xcode... "
+    RESP=$({ ${PATH_OSASCRIPT} "${PATH_WORK}/loadDocSet.scpt"; } 2>&1 )
+    RSLT=$?
+    if [[ ${RSLT} -ne 0 ]]; then
+      echo
+      echo "WARNING. Unable to load Docset into Xcode."
+      echo "Not sure what the problem is."
+      echo
+    fi
+    echo "Finished!"
+    echo
   fi
-  echo "Finished!"
-  echo
 fi
 
 cleanup; exit 0

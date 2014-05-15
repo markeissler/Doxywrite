@@ -1,6 +1,6 @@
 ## Doxywrite
 
-This script makes it easy to generate a DocSet from your Xcode project via Doxygen.
+This script makes it easy to generate a Docset from your Xcode project via Doxygen. As an option, you can also install the generated Docset.
 
 ## Installation
 
@@ -81,7 +81,7 @@ To support the generation of class diagrams, you will need to have dot installed
 	>brew install graphviz
 
 ## Usage
-Once you're ready to generate a DocSet just run Doxywrite from the top level of your project.
+Once you're ready to generate a Docset just run Doxywrite from the top level of your project.
 
 	>sh ./.doxywrite MyTarget
 
@@ -119,6 +119,9 @@ As you can see, command line options are always given the highest preference.
 Doxwrite will place a copy of the generated documentation into the root directory of your project or into the directory specified with the -o (path-output) flag.
 
 **NOTE:** You may want to add the "Documentation" directory to your project's *.gitignore* file.
+
+### Docset Installation
+As of Doxywrite 1.8.0, installation of the generated Docset is optional. To install a Docset on your system, specify the -a (add-docset) flag.
 
 ## Xcode Run-Script
 You can setup a run-script in Xcode to automate the process of generating updated documentation sets.
