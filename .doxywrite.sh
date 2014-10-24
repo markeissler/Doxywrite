@@ -304,12 +304,16 @@ function isPathWriteable() {
 
   # path is a directory...
   if [[ -d "${1}" ]]; then
-    if [[ $({ ${PATH_TOUCH} "${1}.test"; } 2>&1) ]]; then
+    local path="${1%/}/.test"
+    local resp rslt
+    resp=$({ ${PATH_TOUCH} "${path}"; } 2>&1)
+    rslt=$?
+    if [[ ${rslt} -ne 0 ]]; then
       # not writeable directory
       echo 0; return 1
     else
       # writeable directory
-      ${PATH_RM} "${1}.test"
+      ${PATH_RM} "${path}"
       echo 1; return 0
     fi
   fi
