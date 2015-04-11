@@ -152,7 +152,7 @@ Of the above two options, the preferred method is to explicitly invoke the shell
 ### Xcode Aggregate Target Setup
 A clean way to setup automated documentation generation is to add an *Aggregate Target* to your Xcode project, possibly named "Documentation." See the following url for an excellent guide on how to do this:
 
-[http://www.simplicate.info/1/post/2013/07/using-appledoc-to-generate-xcode-help-part-1.html](http://www.simplicate.info/1/post/2013/07/using-appledoc-to-generate-xcode-help-part-1.html)
+[http://www.simplicate.info/2013/07/25/using-appledoc-to-generate-xcode-help-part-1/](http://www.simplicate.info/2013/07/25/using-appledoc-to-generate-xcode-help-part-1/)
 
 ## Bugs and such
 
