@@ -836,8 +836,9 @@ ${PATH_SED} -i -r "s#^PREDEFINED\ *=.*#PREDEFINED = \"${PREDEFINED_EXPANSION_ENU
 #
 # // @TODO: text
 # // @FIXME: text
+# // @BUG: text
 #
-INPUT_FILTER="${PATH_SED} -E -e 's%//[[:space:]]*[@]?(TODO|FIXME)[:]?%//! \\\\\\\todo%i'"
+INPUT_FILTER="${PATH_SED} -E -e 's%//[[:space:]]*[@]?(TODO|FIXME)[:]?%//! \\\\\\\todo%i' -e 's%//[[:space:]]*[@]?BUG[:]?%//! \\\\\\\bug%i'"
 ${PATH_SED} -i -r "s#^INPUT_FILTER\ *=.*#INPUT_FILTER = \"${INPUT_FILTER}\"#" "${TMP_PATH_DOXY_CONFIG}"
 
 # Exclude Cocoapods
