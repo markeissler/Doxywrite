@@ -831,6 +831,14 @@ PREDEFINED_EXPANSION_ENUM="NS_ENUM(x,y)=enum y"
 ${PATH_SED} -i -r "s#^MACRO_EXPANSION\ *=.*#MACRO_EXPANSION = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^EXPAND_ONLY_PREDEF\ *=.*#EXPAND_ONLY_PREDEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^PREDEFINED\ *=.*#PREDEFINED = \"${PREDEFINED_EXPANSION_ENUM}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+#
+# Single line @TODO and @FIXME support
+#
+# // @TODO: text
+# // @FIXME: text
+#
+INPUT_FILTER="${PATH_SED} -E -e 's%//[[:space:]]*[@]?(TODO|FIXME)[:]?%//! \\\\\\\todo%i'"
+${PATH_SED} -i -r "s#^INPUT_FILTER\ *=.*#INPUT_FILTER = \"${INPUT_FILTER}\"#" "${TMP_PATH_DOXY_CONFIG}"
 
 # Exclude Cocoapods
 ${PATH_SED} -i -r "s#^EXCLUDE_PATTERNS\ *=.*#EXCLUDE_PATTERNS = */Pods/*#g" "${TMP_PATH_DOXY_CONFIG}"
