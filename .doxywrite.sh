@@ -75,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.11
+VERSION=1.1.12
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -845,6 +845,16 @@ ${PATH_SED} -i -r "s#^ENUM_VALUES_PER_LINE\ *=.*#ENUM_VALUES_PER_LINE = 1#g" "${
 #
 INPUT_FILTER="${PATH_SED} -E -e 's%//[[:space:]]*[@]?(TODO|FIXME)[:]?%//! \\\\\\\todo%i' -e 's%//[[:space:]]*[@]?BUG[:]?%//! \\\\\\\bug%i'"
 ${PATH_SED} -i -r "s#^INPUT_FILTER\ *=.*#INPUT_FILTER = \"${INPUT_FILTER}\"#" "${TMP_PATH_DOXY_CONFIG}"
+#
+# Configure support for @brief tag
+#
+${PATH_SED} -i -r "s#^BRIEF_MEMBER_DESC\ *=.*#BRIEF_MEMBER_DESC = NO#g" "${TMP_PATH_DOXY_CONFIG}"
+# Don't repeat the @brief description in the extended class and method descriptions.
+${PATH_SED} -i -r "s#^REPEAT_BRIEF\ *=.*#REPEAT_BRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Javadoc style list of links at the top of the page.
+#${PATH_SED} -e "s#^JAVADOC_AUTOBRIEF\ *=.*#JAVADOC_AUTOBRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Insert the @brief description into the class member list at the top of each class reference page.
+${PATH_SED} -i -r "s#^INLINE_INHERITED_MEMB\ *=.*#INLINE_INHERITED_MEMB = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
 # Exclude Cocoapods
 ${PATH_SED} -i -r "s#^EXCLUDE_PATTERNS\ *=.*#EXCLUDE_PATTERNS = */Pods/*#g" "${TMP_PATH_DOXY_CONFIG}"
@@ -860,15 +870,6 @@ ${PATH_SED} -i -r "s#^GENERATE_DOCSET\ *=.*#GENERATE_DOCSET = YES#g" "${TMP_PATH
 
 # Don't generate LATEX output.
 ${PATH_SED} -i -r "s#^GENERATE_LATEX\ *=.*#GENERATE_LATEX = NO#g" "${TMP_PATH_DOXY_CONFIG}"
-
-# Don't repeat the @brief description in the extended class and method descriptions.
-${PATH_SED} -i -r "s#^REPEAT_BRIEF\ *=.*#REPEAT_BRIEF = NO#g" "${TMP_PATH_DOXY_CONFIG}"
-
-# Javadoc style list of links at the top of the page.
-#${PATH_SED} -e "s#^JAVADOC_AUTOBRIEF\ *=.*#JAVADOC_AUTOBRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-
-# Insert the @brief description into the class member list at the top of each class reference page.
-${PATH_SED} -i -r "s#^INLINE_INHERITED_MEMB\ *=.*#INLINE_INHERITED_MEMB = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
 # Extracts documentation for **everything**, including stuff you might not want the user to know about.
 # You can still cause doxygen to skip stuff using special commands. If that's what you prefer uncomment
