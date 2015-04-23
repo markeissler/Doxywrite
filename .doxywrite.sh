@@ -75,7 +75,7 @@ PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.8
+VERSION=1.1.11
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -304,12 +304,16 @@ function isPathWriteable() {
 
   # path is a directory...
   if [[ -d "${1}" ]]; then
-    if [[ $({ ${PATH_TOUCH} "${1}.test"; } 2>&1) ]]; then
+    local path="${1%/}/.test"
+    local resp rslt
+    resp=$({ ${PATH_TOUCH} "${path}"; } 2>&1)
+    rslt=$?
+    if [[ ${rslt} -ne 0 ]]; then
       # not writeable directory
       echo 0; return 1
     else
       # writeable directory
-      ${PATH_RM} "${1}.test"
+      ${PATH_RM} "${path}"
       echo 1; return 0
     fi
   fi
@@ -827,10 +831,11 @@ ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER_ID\ *=.*#DOCSET_PUBLISHER_ID = \"${DOCSET
 #
 # Predfined macro expansion for Apple ENUMs
 #
-PREDEFINED_EXPANSION_ENUM="NS_ENUM(x,y)=enum y"
+PREDEFINED="NS_ENUM(x,y)=enum y"
 ${PATH_SED} -i -r "s#^MACRO_EXPANSION\ *=.*#MACRO_EXPANSION = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^EXPAND_ONLY_PREDEF\ *=.*#EXPAND_ONLY_PREDEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -i -r "s#^PREDEFINED\ *=.*#PREDEFINED = \"${PREDEFINED_EXPANSION_ENUM}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^PREDEFINED\ *=.*#PREDEFINED = \"${PREDEFINED}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^ENUM_VALUES_PER_LINE\ *=.*#ENUM_VALUES_PER_LINE = 1#g" "${TMP_PATH_DOXY_CONFIG}"
 #
 # Single line @TODO and @FIXME support
 #
