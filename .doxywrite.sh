@@ -1,10 +1,9 @@
 #!/bin/bash
 #
-# STEmacsModelines:
 # -*- Shell-Unix-Generic -*-
 #
 
-# Copyright (c) 2014 Mark Eissler, mark@mixtur.com
+# Copyright (c) 2014-2015 Mark Eissler, mark@mixtur.com
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -73,9 +72,21 @@ PATH_DOXYGEN="/usr/local/bin/doxygen"
 #
 PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
+# Where are we?
+#
+PATH_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Custom Doxygen layout definitions
+#
+PATH_DOXY_LAYOUT_FILE="${PATH_SCRIPT}/DoxywriteTemplate/DoxywriteLayout.xml"
+PATH_DOXY_HTML_STYLESHEET="${PATH_SCRIPT}/DoxywriteTemplate/doxywrite.css"
+PATH_DOXY_HTML_EXTRA_STYLESHEET=""
+PATH_DOXY_HTML_HEADER="${PATH_SCRIPT}/DoxywriteTemplate/header.html"
+PATH_DOXY_HTML_FOOTER="${PATH_SCRIPT}/DoxywriteTemplate/footer.html"
+LIST_DOXY_HTML_EXTRA_FILES="${PATH_SCRIPT}/DoxywriteTemplate/doxywrite.js"
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.12
+VERSION=1.2.0
 PROGNAME=`basename $0`
 
 # standard config file location
@@ -821,6 +832,19 @@ fi
 
 #
 # Customize Doxygen config file
+#
+ALIASES='brief=<dl class="discus"><dt>Discussion</dt></dl>@brief'
+${PATH_SED} -i -r "s#^ALIASES\ *=.*#ALIASES = \"${ALIASES}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^LAYOUT_FILE\ *=.*#LAYOUT_FILE = \"${PATH_DOXY_LAYOUT_FILE}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HTML_STYLESHEET\ *=.*#HTML_STYLESHEET = \"${PATH_DOXY_HTML_STYLESHEET}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+if [[ -n "$PATH_DOXY_HTML_EXTRA_STYLESHEET" ]]; then
+  ${PATH_SED} -i -r "s#^HTML_EXTRA_STYLESHEET\ *=.*#HTML_EXTRA_STYLESHEET = \"${PATH_DOXY_HTML_EXTRA_STYLESHEET}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+fi
+${PATH_SED} -i -r "s#^HTML_HEADER\ *=.*#HTML_HEADER = \"${PATH_DOXY_HTML_HEADER}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HTML_FOOTER\ *=.*#HTML_FOOTER = \"${PATH_DOXY_HTML_FOOTER}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HTML_EXTRA_FILES\ *=.*#HTML_EXTRA_FILES = \"${LIST_DOXY_HTML_EXTRA_FILES}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+#
+# Doxywrite configurable options
 #
 ${PATH_SED} -i -r "s#^PROJECT_NAME\ *=.*#PROJECT_NAME = \"${DOCSET_PROJECT_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^INPUT\ *=.*#INPUT = \"${PATH_SEARCH}\"#g" "${TMP_PATH_DOXY_CONFIG}"

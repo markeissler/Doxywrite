@@ -1,10 +1,9 @@
 #
-# STEmacsModelines:
 # -*- Ruby -*-
 #
 Pod::Spec.new do |s|
   s.name           = "Doxywrite"
-  s.version        = "1.1.11"
+  s.version        = "1.2.0"
   s.license        = "MIT"
   s.authors        = { "Mark Eissler" => "mark@mixtur.com" }
   s.summary        = "Generate and install a DocSet from your Xcode project via Doxygen."

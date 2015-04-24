@@ -1,6 +1,5 @@
 #!/bin/bash
 #
-# STEmacsModelines:
 # -*- Shell-Unix-Generic -*-
 #
 # Simple Doxywrite wrapper script that will call Pods/Doxywrite/.doxywrite.sh.
@@ -10,7 +9,7 @@
 #   alias doxywrite="sh .doxywrite.sh"
 #
 
-# Copyright (c) 2014 Mark Eissler, mark@mixtur.com
+# Copyright (c) 2014-2015 Mark Eissler, mark@mixtur.com
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
