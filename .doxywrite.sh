@@ -910,7 +910,7 @@ ${PATH_SED} -i -r "s#^HIDE_UNDOC_CLASSES\ *=.*#HIDE_UNDOC_CLASSES = YES#g" "${TM
 # Enable class diagrams if you have dot installed...
 if [[ -x "${PATH_GRAPHVIZ_DOT}" ]]; then
   ${PATH_SED} -i -r "s#^HAVE_DOT\ *=.*#HAVE_DOT = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-  ${PATH_SED} -i -r "s#^DOT_PATH\ *=.*#DOT_PATH = \"${PATH_GRAPHVIZ_DOT}#g" "${TMP_PATH_DOXY_CONFIG}"
+  ${PATH_SED} -i -r "s#^DOT_PATH\ *=.*#DOT_PATH = \"${PATH_GRAPHVIZ_DOT}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 fi
 
 # Additional diagram generation tweaks..
