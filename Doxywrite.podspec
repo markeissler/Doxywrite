@@ -13,6 +13,9 @@ Pod::Spec.new do |s|
   s.homepage       = "https://github.com/markeissler/Doxywrite"
   s.source         = { :git => "https://github.com/markeissler/Doxywrite.git", :tag => "mx-#{s.version}" }
   s.preserve_paths = ".doxywrite.sh", ".doxywrite-wrapper.sh", ".doxywrite-example.cfg"
+  s.resource_bundles = {
+    'DoxywriteTemplate' => ["DoxywriteTemplate/*.{css,js,html,xml}"]
+  }
   s.requires_arc   = false
   s.prepare_command = <<-CMD
       cp ".doxywrite-wrapper.sh" "../../.doxywrite.sh"
