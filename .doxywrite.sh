@@ -878,6 +878,9 @@ ${PATH_SED} -i -r "s#^INPUT_FILTER\ *=.*#INPUT_FILTER = \"${INPUT_FILTER}\"#" "$
 ${PATH_SED} -i -r "s#^BRIEF_MEMBER_DESC\ *=.*#BRIEF_MEMBER_DESC = NO#g" "${TMP_PATH_DOXY_CONFIG}"
 # Don't repeat the @brief description in the extended class and method descriptions.
 ${PATH_SED} -i -r "s#^REPEAT_BRIEF\ *=.*#REPEAT_BRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Force output of detailed description section even if there is only a brief description.
+# NOTE: This is required for proper css formatting of the brief tag.
+${PATH_SED} -i -r "s#^ALWAYS_DETAILED_SEC\ *=.*#ALWAYS_DETAILED_SEC = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 # Javadoc style list of links at the top of the page.
 #${PATH_SED} -e "s#^JAVADOC_AUTOBRIEF\ *=.*#JAVADOC_AUTOBRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 # Insert the @brief description into the class member list at the top of each class reference page.
