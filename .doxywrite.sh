@@ -108,9 +108,6 @@ PATH_WORK=""
 # standard BSD sed is called by cleanString(); we will find this
 PATH_STD_SED=""
 
-# temp paths for files that will be cleaned up
-TMP_PATH_DOXY_CONFIG=".doxyfile.cfg"
-
 # doxygen config
 DOCSET_PROJECT_NAME="MyProject"
 DOCSET_BUNDLE_ID="com.yourdomain.MyProject"
