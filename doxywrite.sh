@@ -90,7 +90,7 @@ VERSION=1.2.0
 PROGNAME=`basename $0`
 
 # standard config file location
-PATH_CONFIG=".doxywrite.cfg"
+PATH_CONFIG="doxywrite.cfg"
 PATH_OSASCRIPT="/usr/bin/osascript"
 
 # reset internal vars (do not touch these here)
@@ -465,9 +465,15 @@ if [ -n "${cli_CONFIGPATH}" ]; then
 fi
 
 # load config
+#
+# Check for both dotted and non-dotted versions, the non-dotted version takes
+# priority as the other one may be invisible to the user.
 echo
 printf "Checking for a config file... "
 if [ -s "${PATH_CONFIG}" ] && [ -r "${PATH_CONFIG}" ]; then
+  source "${PATH_CONFIG}" &> /dev/null
+elif [ -s ".${PATH_CONFIG}" ] && [ -r ".${PATH_CONFIG}" ]; then
+  PATH_CONFIG=".${PATH_CONFIG}"
   source "${PATH_CONFIG}" &> /dev/null
 else
   printf "!!"
