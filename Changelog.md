@@ -1,3 +1,25 @@
+
+mx-1.2.0 / 2015-10-13
+=====================
+
+NOTE: This release drops support for Cocoapods. Unfortunately, technical changes to Cocoapods that better align with a narrowed mission mean this mode of installation can no longer be implemented. Instructions have been updated to reflect a refined manual install.
+  
+  * Updated README for 1.2.0 release.
+  * Fix output to include DOCSET_PAGE_MAIN in search path.
+  * Add support for finding project config file with or without preceding dot.
+  * Remove dots from example config and doxywrite script file.
+  * Fix tmp path again.
+  * Remove pod-specific files.
+  * Fix large gap under Discussion title.
+  * Fix brief tag output for class discussion section.
+  * Add support for DOXYGEN preproc flag.
+  * Fix missing trailing quote for DOT_PATH.
+  * Add support for better macro handling.
+  * Implement separation of @brief and main discussion text.
+  * Add support to isolate brief description and discussion content.
+  * Improved reliability of isPathWriteable(). Add slash to directories that don't end with one.
+  * Correction to vers specified when Docset install became optional. Should have been 1.1.8 instead of 1.8.0.
+
 mx-1.1.11 / 2015-04-23
 ======================
 

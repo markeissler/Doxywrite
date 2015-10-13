@@ -1,10 +1,9 @@
 #!/bin/bash
 #
-# STEmacsModelines:
 # -*- Shell-Unix-Generic -*-
 #
 
-# Copyright (c) 2014 Mark Eissler, mark@mixtur.com
+# Copyright (c) 2014-2015 Mark Eissler, mark@mixtur.com
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -73,13 +72,25 @@ PATH_DOXYGEN="/usr/local/bin/doxygen"
 #
 PATH_GRAPHVIZ_DOT="/usr/local/bin/dot"
 
+# Where are we?
+#
+PATH_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Custom Doxygen layout definitions
+#
+PATH_DOXY_LAYOUT_FILE="${PATH_SCRIPT}/DoxywriteTemplate/DoxywriteLayout.xml"
+PATH_DOXY_HTML_STYLESHEET="${PATH_SCRIPT}/DoxywriteTemplate/doxywrite.css"
+PATH_DOXY_HTML_EXTRA_STYLESHEET=""
+PATH_DOXY_HTML_HEADER="${PATH_SCRIPT}/DoxywriteTemplate/header.html"
+PATH_DOXY_HTML_FOOTER="${PATH_SCRIPT}/DoxywriteTemplate/footer.html"
+LIST_DOXY_HTML_EXTRA_FILES="${PATH_SCRIPT}/DoxywriteTemplate/doxywrite.js"
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.1.11
+VERSION=1.2.0
 PROGNAME=`basename $0`
 
 # standard config file location
-PATH_CONFIG=".doxywrite.cfg"
+PATH_CONFIG="doxywrite.cfg"
 PATH_OSASCRIPT="/usr/bin/osascript"
 
 # reset internal vars (do not touch these here)
@@ -96,9 +107,6 @@ PATH_WORK=""
 
 # standard BSD sed is called by cleanString(); we will find this
 PATH_STD_SED=""
-
-# temp paths for files that will be cleaned up
-TMP_PATH_DOXY_CONFIG=".doxyfile.cfg"
 
 # doxygen config
 DOCSET_PROJECT_NAME="MyProject"
@@ -130,7 +138,7 @@ OPTIONS:
    -r, --path-root   rDirPath   Path to project root directory
    -s, --path-search sDirPath   Path to directory for files to search
    -o, --path-output oDirPath   Path to output directory (default: project root)
-   -w, --path-temp   wDirPath   Path to temporary directory (default: /tmp)
+   -w, --path-temp   wDirPath   Path to temp directory (default: /tmp/doxywrite)
    -x, --xcodeenv               Import Xcode environment variables
    -d, --debug                  Turn debugging on (increases verbosity)
    -f, --force                  Execute updates without user prompt
@@ -154,7 +162,7 @@ OPTIONS:
    -r rDirPath                  Path to project root directory
    -s sDirPath                  Path to directory for files to search
    -o oDirPath                  Path to output directory (default: project root)
-   -w wDirPath                  Path to temporary directory (default: /tmp)
+   -w wDirPath                  Path to temp directory (default: /tmp/doxywrite)
    -x                           Import Xcode environment variables
    -d                           Turn debugging on (increases verbosity)
    -f                           Execute updates without user prompt
@@ -284,7 +292,7 @@ function isGnuSed() {
 #  if [ $(isNumber "${NUMBER}") -eq 1 ]; then
 #
 function isPathRoot() {
-  if [[ ${1} =~ ^\/[^\/.]*$ ]]; then
+  if [[ ${1} =~ ^([\/]+([A-Za-z0-9_]*[\/]*)){1}$ ]]; then
     # match
     echo 1; return 0
   else
@@ -457,9 +465,15 @@ if [ -n "${cli_CONFIGPATH}" ]; then
 fi
 
 # load config
+#
+# Check for both dotted and non-dotted versions, the non-dotted version takes
+# priority as the other one may be invisible to the user.
 echo
 printf "Checking for a config file... "
 if [ -s "${PATH_CONFIG}" ] && [ -r "${PATH_CONFIG}" ]; then
+  source "${PATH_CONFIG}" &> /dev/null
+elif [ -s ".${PATH_CONFIG}" ] && [ -r ".${PATH_CONFIG}" ]; then
+  PATH_CONFIG=".${PATH_CONFIG}"
   source "${PATH_CONFIG}" &> /dev/null
 else
   printf "!!"
@@ -587,7 +601,7 @@ if [ -n "${cli_WORKPATH}" ]; then
 fi
 # If PATH_WORK is still empty, configure to /tmp
 if [ -z "${PATH_WORK}" ]; then
-  PATH_WORK="/tmp"
+  PATH_WORK="/tmp/doxywrite"
 fi
 # If PATH_WORK is on / (root), bail out
 if [[ $(isPathRoot "${PATH_WORK}") -eq 1 ]]; then
@@ -822,8 +836,21 @@ fi
 #
 # Customize Doxygen config file
 #
+ALIASES='brief=<dl class="discus"><dt>Discussion</dt></dl>@brief'
+${PATH_SED} -i -r "s#^ALIASES\ *=.*#ALIASES = \"${ALIASES}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^LAYOUT_FILE\ *=.*#LAYOUT_FILE = \"${PATH_DOXY_LAYOUT_FILE}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HTML_STYLESHEET\ *=.*#HTML_STYLESHEET = \"${PATH_DOXY_HTML_STYLESHEET}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+if [[ -n "$PATH_DOXY_HTML_EXTRA_STYLESHEET" ]]; then
+  ${PATH_SED} -i -r "s#^HTML_EXTRA_STYLESHEET\ *=.*#HTML_EXTRA_STYLESHEET = \"${PATH_DOXY_HTML_EXTRA_STYLESHEET}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+fi
+${PATH_SED} -i -r "s#^HTML_HEADER\ *=.*#HTML_HEADER = \"${PATH_DOXY_HTML_HEADER}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HTML_FOOTER\ *=.*#HTML_FOOTER = \"${PATH_DOXY_HTML_FOOTER}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HTML_EXTRA_FILES\ *=.*#HTML_EXTRA_FILES = \"${LIST_DOXY_HTML_EXTRA_FILES}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+#
+# Doxywrite configurable options
+#
 ${PATH_SED} -i -r "s#^PROJECT_NAME\ *=.*#PROJECT_NAME = \"${DOCSET_PROJECT_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -i -r "s#^INPUT\ *=.*#INPUT = \"${PATH_SEARCH}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^INPUT\ *=.*#INPUT = \"${PATH_SEARCH}\" \"${DOCSET_PAGE_MAIN}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^OUTPUT_DIRECTORY\ *=.*#OUTPUT_DIRECTORY = \"${TMP_PATH_DOXY_DOCSET}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^DOCSET_BUNDLE_ID\ *=.*#DOCSET_BUNDLE_ID = \"${DOCSET_BUNDLE_ID}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER\ *=.*#DOCSET_PUBLISHER = \"${DOCSET_PUBLISHER_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
@@ -831,10 +858,13 @@ ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER_ID\ *=.*#DOCSET_PUBLISHER_ID = \"${DOCSET
 #
 # Predfined macro expansion for Apple ENUMs
 #
-PREDEFINED="NS_ENUM(x,y)=enum y"
+PREDEFINED="\"NS_ENUM(x,y)=enum y\" \"DOXYGEN\""
+EXPAND_AS_DEFINED=""
 ${PATH_SED} -i -r "s#^MACRO_EXPANSION\ *=.*#MACRO_EXPANSION = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^EXPAND_ONLY_PREDEF\ *=.*#EXPAND_ONLY_PREDEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -i -r "s#^PREDEFINED\ *=.*#PREDEFINED = \"${PREDEFINED}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^PREDEFINED\ *=.*#PREDEFINED = ${PREDEFINED}#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^EXPAND_AS_DEFINED\ *=.*#EXPAND_AS_DEFINED = \"${EXPAND_AS_DEFINED}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^SKIP_FUNCTION_MACROS\ *=.*#SKIP_FUNCTION_MACROS = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^ENUM_VALUES_PER_LINE\ *=.*#ENUM_VALUES_PER_LINE = 1#g" "${TMP_PATH_DOXY_CONFIG}"
 #
 # Single line @TODO and @FIXME support
@@ -845,6 +875,19 @@ ${PATH_SED} -i -r "s#^ENUM_VALUES_PER_LINE\ *=.*#ENUM_VALUES_PER_LINE = 1#g" "${
 #
 INPUT_FILTER="${PATH_SED} -E -e 's%//[[:space:]]*[@]?(TODO|FIXME)[:]?%//! \\\\\\\todo%i' -e 's%//[[:space:]]*[@]?BUG[:]?%//! \\\\\\\bug%i'"
 ${PATH_SED} -i -r "s#^INPUT_FILTER\ *=.*#INPUT_FILTER = \"${INPUT_FILTER}\"#" "${TMP_PATH_DOXY_CONFIG}"
+#
+# Configure support for @brief tag
+#
+${PATH_SED} -i -r "s#^BRIEF_MEMBER_DESC\ *=.*#BRIEF_MEMBER_DESC = NO#g" "${TMP_PATH_DOXY_CONFIG}"
+# Don't repeat the @brief description in the extended class and method descriptions.
+${PATH_SED} -i -r "s#^REPEAT_BRIEF\ *=.*#REPEAT_BRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Force output of detailed description section even if there is only a brief description.
+# NOTE: This is required for proper css formatting of the brief tag.
+${PATH_SED} -i -r "s#^ALWAYS_DETAILED_SEC\ *=.*#ALWAYS_DETAILED_SEC = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Javadoc style list of links at the top of the page.
+#${PATH_SED} -e "s#^JAVADOC_AUTOBRIEF\ *=.*#JAVADOC_AUTOBRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Insert the @brief description into the class member list at the top of each class reference page.
+${PATH_SED} -i -r "s#^INLINE_INHERITED_MEMB\ *=.*#INLINE_INHERITED_MEMB = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
 # Exclude Cocoapods
 ${PATH_SED} -i -r "s#^EXCLUDE_PATTERNS\ *=.*#EXCLUDE_PATTERNS = */Pods/*#g" "${TMP_PATH_DOXY_CONFIG}"
@@ -861,15 +904,6 @@ ${PATH_SED} -i -r "s#^GENERATE_DOCSET\ *=.*#GENERATE_DOCSET = YES#g" "${TMP_PATH
 # Don't generate LATEX output.
 ${PATH_SED} -i -r "s#^GENERATE_LATEX\ *=.*#GENERATE_LATEX = NO#g" "${TMP_PATH_DOXY_CONFIG}"
 
-# Don't repeat the @brief description in the extended class and method descriptions.
-${PATH_SED} -i -r "s#^REPEAT_BRIEF\ *=.*#REPEAT_BRIEF = NO#g" "${TMP_PATH_DOXY_CONFIG}"
-
-# Javadoc style list of links at the top of the page.
-#${PATH_SED} -e "s#^JAVADOC_AUTOBRIEF\ *=.*#JAVADOC_AUTOBRIEF = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-
-# Insert the @brief description into the class member list at the top of each class reference page.
-${PATH_SED} -i -r "s#^INLINE_INHERITED_MEMB\ *=.*#INLINE_INHERITED_MEMB = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-
 # Extracts documentation for **everything**, including stuff you might not want the user to know about.
 # You can still cause doxygen to skip stuff using special commands. If that's what you prefer uncomment
 # this and comment out the two lines below this one.
@@ -882,7 +916,7 @@ ${PATH_SED} -i -r "s#^HIDE_UNDOC_CLASSES\ *=.*#HIDE_UNDOC_CLASSES = YES#g" "${TM
 # Enable class diagrams if you have dot installed...
 if [[ -x "${PATH_GRAPHVIZ_DOT}" ]]; then
   ${PATH_SED} -i -r "s#^HAVE_DOT\ *=.*#HAVE_DOT = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-  ${PATH_SED} -i -r "s#^DOT_PATH\ *=.*#DOT_PATH = \"${PATH_GRAPHVIZ_DOT}#g" "${TMP_PATH_DOXY_CONFIG}"
+  ${PATH_SED} -i -r "s#^DOT_PATH\ *=.*#DOT_PATH = \"${PATH_GRAPHVIZ_DOT}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 fi
 
 # Additional diagram generation tweaks..
