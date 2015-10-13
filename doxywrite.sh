@@ -90,7 +90,7 @@ VERSION=1.2.0
 PROGNAME=`basename $0`
 
 # standard config file location
-PATH_CONFIG=".doxywrite.cfg"
+PATH_CONFIG="doxywrite.cfg"
 PATH_OSASCRIPT="/usr/bin/osascript"
 
 # reset internal vars (do not touch these here)
@@ -107,9 +107,6 @@ PATH_WORK=""
 
 # standard BSD sed is called by cleanString(); we will find this
 PATH_STD_SED=""
-
-# temp paths for files that will be cleaned up
-TMP_PATH_DOXY_CONFIG=".doxyfile.cfg"
 
 # doxygen config
 DOCSET_PROJECT_NAME="MyProject"
@@ -141,7 +138,7 @@ OPTIONS:
    -r, --path-root   rDirPath   Path to project root directory
    -s, --path-search sDirPath   Path to directory for files to search
    -o, --path-output oDirPath   Path to output directory (default: project root)
-   -w, --path-temp   wDirPath   Path to temporary directory (default: /tmp)
+   -w, --path-temp   wDirPath   Path to temp directory (default: /tmp/doxywrite)
    -x, --xcodeenv               Import Xcode environment variables
    -d, --debug                  Turn debugging on (increases verbosity)
    -f, --force                  Execute updates without user prompt
@@ -165,7 +162,7 @@ OPTIONS:
    -r rDirPath                  Path to project root directory
    -s sDirPath                  Path to directory for files to search
    -o oDirPath                  Path to output directory (default: project root)
-   -w wDirPath                  Path to temporary directory (default: /tmp)
+   -w wDirPath                  Path to temp directory (default: /tmp/doxywrite)
    -x                           Import Xcode environment variables
    -d                           Turn debugging on (increases verbosity)
    -f                           Execute updates without user prompt
@@ -295,7 +292,7 @@ function isGnuSed() {
 #  if [ $(isNumber "${NUMBER}") -eq 1 ]; then
 #
 function isPathRoot() {
-  if [[ ${1} =~ ^\/[^\/.]*$ ]]; then
+  if [[ ${1} =~ ^([\/]+([A-Za-z0-9_]*[\/]*)){1}$ ]]; then
     # match
     echo 1; return 0
   else
@@ -468,9 +465,15 @@ if [ -n "${cli_CONFIGPATH}" ]; then
 fi
 
 # load config
+#
+# Check for both dotted and non-dotted versions, the non-dotted version takes
+# priority as the other one may be invisible to the user.
 echo
 printf "Checking for a config file... "
 if [ -s "${PATH_CONFIG}" ] && [ -r "${PATH_CONFIG}" ]; then
+  source "${PATH_CONFIG}" &> /dev/null
+elif [ -s ".${PATH_CONFIG}" ] && [ -r ".${PATH_CONFIG}" ]; then
+  PATH_CONFIG=".${PATH_CONFIG}"
   source "${PATH_CONFIG}" &> /dev/null
 else
   printf "!!"
@@ -598,7 +601,7 @@ if [ -n "${cli_WORKPATH}" ]; then
 fi
 # If PATH_WORK is still empty, configure to /tmp
 if [ -z "${PATH_WORK}" ]; then
-  PATH_WORK="/tmp"
+  PATH_WORK="/tmp/doxywrite"
 fi
 # If PATH_WORK is on / (root), bail out
 if [[ $(isPathRoot "${PATH_WORK}") -eq 1 ]]; then
@@ -847,7 +850,7 @@ ${PATH_SED} -i -r "s#^HTML_EXTRA_FILES\ *=.*#HTML_EXTRA_FILES = \"${LIST_DOXY_HT
 # Doxywrite configurable options
 #
 ${PATH_SED} -i -r "s#^PROJECT_NAME\ *=.*#PROJECT_NAME = \"${DOCSET_PROJECT_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -i -r "s#^INPUT\ *=.*#INPUT = \"${PATH_SEARCH}\"#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^INPUT\ *=.*#INPUT = \"${PATH_SEARCH}\" \"${DOCSET_PAGE_MAIN}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^OUTPUT_DIRECTORY\ *=.*#OUTPUT_DIRECTORY = \"${TMP_PATH_DOXY_DOCSET}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^DOCSET_BUNDLE_ID\ *=.*#DOCSET_BUNDLE_ID = \"${DOCSET_BUNDLE_ID}\"#g" "${TMP_PATH_DOXY_CONFIG}"
 ${PATH_SED} -i -r "s#^DOCSET_PUBLISHER\ *=.*#DOCSET_PUBLISHER = \"${DOCSET_PUBLISHER_NAME}\"#g" "${TMP_PATH_DOXY_CONFIG}"

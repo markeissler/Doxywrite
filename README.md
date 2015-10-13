@@ -9,36 +9,14 @@ Copy .doxywrite.sh (script) and .doxywrite.cfg (config) files into the top-level
 **NOTE:** It is intended that you copy **both** of these files into your project so that you won't have to worry about future changes to this code.
 
 ### Cocoapods
-The easiest way to install Doxywrite is with [Cocoapods](http://cocoapods.org)! Add the following dependency to your project's podfile...
-
-For a release build:
-
-	pod "Doxywrite", :git => "https://github.com/markeissler/Doxywrite.git"
-
-For a development build:
-
-	pod "Doxywrite", :git => "https://github.com/markeissler/Doxywrite.git",
-	    :branch => 'develop'
-
-**NOTE:** When installing with [Cocoapods](http://cocoapods.org), the installation script will copy the .doxywrite-wrapper.sh script into your project root directory, renaming it to ".doxywrite.sh" along the way. This script will call the actual script in the Pods directory. You may want to add the following alias to your .bashrc file to make it easier to call doxywrite manually:
-
-	alias doxywrite="sh .doxywrite.sh"
+Due to changes in the cocoapods project, it is no longer possible to install Doxywrite via cocoa pods.
 
 ### .gitignore
-Because you can easily re-install Doxywrite with [Cocoapods](http://cocoapods.org), your .gitignore file should likely contain the following:
+Make sure you don't checkin the example configuration file. Add the following content to your .gitignore:
 
 	# Doxywrite
-	.doxywrite.sh
 	.doxywrite-example.cfg
-	
-The only Doxywrite file you will want to checkin to your repo is your customized .doxywrite.cfg file.
 
-### Updating
-Once again, [Cocoapods](http://cocoapods.org) makes it easy to update to the latest version of Doxywrite:
-
-	>pod update Doxywrite
-	
-Your .doxywrite.cfg file never be overwritten during an update. Also, the example config will only be copied over to your project if the installation process detects that no .doxywrite.cfg file is present.
 
 ### Config file
 Rename the provided ".doxywrite-example.cfg" file to ".doxywrite.cfg". At a minimum, you should setup the following parameters in the configuration file:
@@ -162,7 +140,3 @@ Submit bugs by opening an issue on this project's github page.
 
 Doxywrite is licensed under the MIT open source license.
 
-## Appreciation
-Like this script? Let me know! You can send some kudos my way courtesy of Flattr:
-
-[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=markeissler&url=https://github.com/markeissler/Doxywrite&title=Doxywrite&language=bash&tags=github&category=software)
