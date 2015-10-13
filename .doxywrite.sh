@@ -138,7 +138,7 @@ OPTIONS:
    -r, --path-root   rDirPath   Path to project root directory
    -s, --path-search sDirPath   Path to directory for files to search
    -o, --path-output oDirPath   Path to output directory (default: project root)
-   -w, --path-temp   wDirPath   Path to temporary directory (default: /tmp)
+   -w, --path-temp   wDirPath   Path to temp directory (default: /tmp/doxywrite)
    -x, --xcodeenv               Import Xcode environment variables
    -d, --debug                  Turn debugging on (increases verbosity)
    -f, --force                  Execute updates without user prompt
@@ -162,7 +162,7 @@ OPTIONS:
    -r rDirPath                  Path to project root directory
    -s sDirPath                  Path to directory for files to search
    -o oDirPath                  Path to output directory (default: project root)
-   -w wDirPath                  Path to temporary directory (default: /tmp)
+   -w wDirPath                  Path to temp directory (default: /tmp/doxywrite)
    -x                           Import Xcode environment variables
    -d                           Turn debugging on (increases verbosity)
    -f                           Execute updates without user prompt
@@ -292,7 +292,7 @@ function isGnuSed() {
 #  if [ $(isNumber "${NUMBER}") -eq 1 ]; then
 #
 function isPathRoot() {
-  if [[ ${1} =~ ^\/[^\/.]*$ ]]; then
+  if [[ ${1} =~ ^([\/]+([A-Za-z0-9_]*[\/]*)){1}$ ]]; then
     # match
     echo 1; return 0
   else
@@ -595,7 +595,7 @@ if [ -n "${cli_WORKPATH}" ]; then
 fi
 # If PATH_WORK is still empty, configure to /tmp
 if [ -z "${PATH_WORK}" ]; then
-  PATH_WORK="/tmp"
+  PATH_WORK="/tmp/doxywrite"
 fi
 # If PATH_WORK is on / (root), bail out
 if [[ $(isPathRoot "${PATH_WORK}") -eq 1 ]]; then
