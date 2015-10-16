@@ -98,6 +98,7 @@ ADDDOCSET=0
 DEBUG=0
 FORCEEXEC=0
 XCODEENV=0
+SHOWINTERNAL=0
 GETOPT_OLD=0
 TARGETNAME=""
 PATH_ROOT=""
@@ -140,6 +141,7 @@ OPTIONS:
    -o, --path-output oDirPath   Path to output directory (default: project root)
    -w, --path-temp   wDirPath   Path to temp directory (default: /tmp/doxywrite)
    -x, --xcodeenv               Import Xcode environment variables
+   -y, --show-internal          Include docs marked with the internal tag
    -d, --debug                  Turn debugging on (increases verbosity)
    -f, --force                  Execute updates without user prompt
    -h, --help                   Show this message
@@ -164,6 +166,7 @@ OPTIONS:
    -o oDirPath                  Path to output directory (default: project root)
    -w wDirPath                  Path to temp directory (default: /tmp/doxywrite)
    -x                           Import Xcode environment variables
+   -y                           Include docs marked with the internal tag
    -d                           Turn debugging on (increases verbosity)
    -f                           Execute updates without user prompt
    -h                           Show this message
@@ -362,6 +365,8 @@ function promptConfirm() {
 #   --path-search, s
 #   --path-output, o
 #   --path-work, w
+#   --xcodeenv, x
+#   --show-internal, y
 #   --debug, d
 #   --force, f
 #   --help, h
@@ -372,12 +377,12 @@ getopt -T > /dev/null
 if [ $? -eq 4 ]; then
   # GNU enhanced getopt is available
   PROGNAME=`basename $0`
-  params="$(getopt --name "$PROGNAME" --long add-docset,path-config:,path-root:,path-search:,path-output:,path-work:,xcodeenv,force,help,version,debug --options ac:r:s:o:w:xfhvd -- "$@")"
+  params="$(getopt --name "$PROGNAME" --long add-docset,path-config:,path-root:,path-search:,path-output:,path-work:,xcodeenv,show-internal,force,help,version,debug --options ac:r:s:o:w:xyfhvd -- "$@")"
 else
   # Original getopt is available
   GETOPT_OLD=1
   PROGNAME=`basename $0`
-  params="$(getopt ac:r:s:o:w:xfhvd "$@")"
+  params="$(getopt ac:r:s:o:w:xyfhvd "$@")"
 fi
 
 # check for invalid params passed; bail out if error is set.
@@ -398,6 +403,7 @@ while [ $# -gt 0 ]; do
     -o | --path-output)     cli_OUTPUTPATH="$2"; shift;;
     -w | --path-work)       cli_WORKPATH="$2"; shift;;
     -x | --xcodeenv)        cli_XCODEENV=1; XCODEENV=${cli_XCODEENV};;
+    -y | --show-internal)   cli_SHOWINTERNAL=1; SHOWINTERNAL=${cli_SHOWINTERNAL};;
     -d | --debug)           cli_DEBUG=1; DEBUG=${cli_DEBUG};;
     -f | --force)           cli_FORCEEXEC=1;;
     -v | --version)         version; exit;;
@@ -909,9 +915,16 @@ ${PATH_SED} -i -r "s#^GENERATE_LATEX\ *=.*#GENERATE_LATEX = NO#g" "${TMP_PATH_DO
 # this and comment out the two lines below this one.
 ${PATH_SED} -i -r "s#^EXTRACT_ALL\ *=.*#EXTRACT_ALL = YES#g" "${TMP_PATH_DOXY_CONFIG}"
 
-# Hide undocumented members and classes.
+# Hide undocumented members, relations.
 ${PATH_SED} -i -r "s#^HIDE_UNDOC_MEMBERS\ *=.*#HIDE_UNDOC_MEMBERS = YES#g" "${TMP_PATH_DOXY_CONFIG}"
-${PATH_SED} -i -r "s#^HIDE_UNDOC_CLASSES\ *=.*#HIDE_UNDOC_CLASSES = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+${PATH_SED} -i -r "s#^HIDE_UNDOC_RELATIONS\ *=.*#HIDE_UNDOC_RELATIONS = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+# Show undocumented classes (so we can see inheritance from API).
+${PATH_SED} -i -r "s#^HIDE_UNDOC_CLASSES\ *=.*#HIDE_UNDOC_CLASSES = NO#g" "${TMP_PATH_DOXY_CONFIG}"
+
+# Include documentation marked with internal tag
+if [[ ${SHOWINTERNAL} -ne 0 ]]; then
+  ${PATH_SED} -i -r "s#^INTERNAL_DOCS\ *=.*#INTERNAL_DOCS = YES#g" "${TMP_PATH_DOXY_CONFIG}"
+fi
 
 # Enable class diagrams if you have dot installed...
 if [[ -x "${PATH_GRAPHVIZ_DOT}" ]]; then
