@@ -86,7 +86,7 @@ PATH_DOXY_HTML_FOOTER="${PATH_SCRIPT}/DoxywriteTemplate/footer.html"
 LIST_DOXY_HTML_EXTRA_FILES="${PATH_SCRIPT}/DoxywriteTemplate/doxywrite.js"
 
 ###### NO SERVICABLE PARTS BELOW ######
-VERSION=1.2.0
+VERSION=1.3.0
 PROGNAME=`basename $0`
 
 # standard config file location
